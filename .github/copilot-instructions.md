@@ -52,6 +52,16 @@ Before implementing any new mechanic (overseer, slave market, cotton, research t
 research the historical basis first. Check concept.txt in the repo root for design research.
 Do not implement from assumption — ask for sources.
 
+## Verified historical reference (quick)
+- Use `docs/history.md` as the working baseline for economy tuning.
+- Tobacco price anchor for 1780s: low single-digit cents per pound (roughly 2-5c/lb).
+- Productivity anchor: roughly 1,700 lbs tobacco per worker-year (late Chesapeake benchmark).
+- Tobacco labor model: gang-based supervised teams were common.
+- Soil depletion from tobacco monoculture was severe and should remain core pressure.
+- Planter finances were debt-pressured; recurring upkeep pressure is more realistic than instant $0 collapse.
+
+When changing `src/gameLogic/constants.js`, read `docs/history.md` first and update it if new research changes a historical range.
+
 ## Out of scope (MVP)
 Cotton chain, cotton gin mechanics, named workers, research/adoption tree,
 historical random events, overseer system, slave auction market, guano imports, sound.

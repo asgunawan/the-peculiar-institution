@@ -51,16 +51,36 @@ export default function App() {
   }, [state, currentPrice]);
 
   const handleAssignmentChange = useCallback((newAssignments) => {
-    setState((s) => ({ ...s, assignments: newAssignments }));
+    setState((s) => ({
+      ...s,
+      assignments: newAssignments,
+      // Track maintenance intent independently so season transitions restore it.
+      maintenanceTarget: newAssignments.maintenance ?? s.maintenanceTarget,
+    }));
   }, []);
 
   const handleAdvanceSeason = useCallback(() => {
+    const currentSeason = SEASONS[state.seasonIndex];
+    const currentActiveTasks = SEASON_TASKS[currentSeason] ?? [];
+    const assignedNow = currentActiveTasks.reduce(
+      (sum, t) => sum + (state.assignments[t] || 0),
+      0
+    );
+    const unassignedWorkersNow = Math.max(0, state.workers - assignedNow);
+
+    if (unassignedWorkersNow > 0) {
+      const proceed = window.confirm(
+        `You still have ${unassignedWorkersNow} unassigned worker(s). Continue to next season anyway?`
+      );
+      if (!proceed) return;
+    }
+
     setState((s) => {
       const next = resolveSeason(s);
       setCurrentPrice(getSellPrice(next.year));
       return next;
     });
-  }, []);
+  }, [state]);
 
   const handleSellTobacco = useCallback((requestedLbs) => {
     setState((s) => {
@@ -137,14 +157,15 @@ export default function App() {
   const activeTasks = SEASON_TASKS[season] ?? [];
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (state.assignments[t] || 0), 0);
   const isOverAssigned = totalAssigned > state.workers;
+  const unassignedWorkers = Math.max(0, state.workers - totalAssigned);
 
   if (state.gameOver) {
     return (
       <div className="overlay-screen game-over">
         <h1>The Plantation is Lost</h1>
         <p>
-          Your creditors have come. With no money and no tobacco to sell, the
-          operation has collapsed.
+          Your creditors have called your debts. After repeated defaults with no
+          tobacco left to liquidate, the operation has been foreclosed.
         </p>
         <p className="overlay-year">Year {state.year}</p>
         <button className="btn btn-new-game" onClick={handleNewGame}>Try Again</button>
@@ -177,6 +198,7 @@ export default function App() {
             workers={state.workers}
             season={season}
             assignments={state.assignments}
+            plots={state.plots}
             onChange={handleAssignmentChange}
           />
           <LandPanel plots={state.plots} />
@@ -207,6 +229,11 @@ export default function App() {
         </button>
         {isOverAssigned && (
           <p className="footer-warning">Over-assigned — reduce worker assignments first.</p>
+        )}
+        {!isOverAssigned && unassignedWorkers > 0 && (
+          <p className="footer-warning">
+            {unassignedWorkers} worker(s) are unassigned. Advancing will continue with idle labor.
+          </p>
         )}
         <button
           className="btn btn-reset"

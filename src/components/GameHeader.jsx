@@ -1,5 +1,4 @@
 // GameHeader.jsx — Displays year, season, money, and a contextual subtitle.
-import { SEASONS } from "../gameLogic/constants.js";
 
 const SEASON_SUBTITLES = {
   Spring: "Assign workers to planting.",

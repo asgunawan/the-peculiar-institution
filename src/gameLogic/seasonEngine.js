@@ -12,13 +12,17 @@
 
 import {
   SEASONS,
-  TASKS,
+  SEASON_TASKS,
   BASE_YIELD_PER_PLOT,
   SOIL_DEGRADE_PER_HARVEST,
   SOIL_RESTORE_PER_WORKER,
   CURING_RATIO,
+  CURING_CAPACITY_PER_WORKER,
   WORKERS_PER_PLOT_FULL_TEND,
   TOBACCO_PRICE_CURVE,
+  PRICE_VARIANCE_CENTS,
+  SEASONAL_WORKER_UPKEEP,
+  DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
 } from "./constants.js";
 
@@ -204,13 +208,18 @@ function resolveFall(state) {
  */
 function resolveWinter(state) {
   const plots = clonePlots(state.plots);
-  const { curing, maintenance } = state.assignments;
+  const { curing } = state.assignments;
   let log = [...state.log];
   let { rawTobacco, curedTobacco } = state.resources;
+  const upkeepCost = state.workers * SEASONAL_WORKER_UPKEEP;
+  const moneyAfterUpkeep = parseFloat((state.money - upkeepCost).toFixed(2));
+
+  log = pushLog(
+    log,
+    `Winter — Provisioning and upkeep cost $${upkeepCost.toFixed(2)} for ${state.workers} worker(s).`
+  );
 
   // ── Curing ─────────────────────────────────────────────────────────────
-  // Each curing worker can process 20 lbs of raw leaf per season.
-  const CURING_CAPACITY_PER_WORKER = 20;
   const maxCanCure = curing * CURING_CAPACITY_PER_WORKER;
   const rawUsed = Math.min(rawTobacco, maxCanCure);
   const newCured = Math.floor(rawUsed / CURING_RATIO);
@@ -235,23 +244,10 @@ function resolveWinter(state) {
     log = pushLog(log, "Winter — No raw leaf to cure.");
   }
 
-  // ── Maintenance ─────────────────────────────────────────────────────────
-  if (maintenance > 0 && plots.length > 0) {
-    const totalRestore = maintenance * SOIL_RESTORE_PER_WORKER;
-    const restorePerPlot = totalRestore / plots.length;
-    plots.forEach((p) => {
-      p.soilHealth = clamp(p.soilHealth + restorePerPlot, 0, 100);
-    });
-    log = pushLog(
-      log,
-      `Winter — ${maintenance} worker(s) tended the fields, restoring ~${Math.round(restorePerPlot)} soil health per plot.`
-    );
-  }
 
   const resources = { rawTobacco: 0, curedTobacco };
 
   // ── Check for victory (cotton gin) ──────────────────────────────────────
-  const nextYear = state.year + 1;
   if (state.year === COTTON_GIN_YEAR - 1) {
     log = pushLog(
       log,
@@ -261,6 +257,7 @@ function resolveWinter(state) {
 
   return {
     ...state,
+    money: moneyAfterUpkeep,
     plots,
     resources,
     log,
@@ -289,33 +286,65 @@ export function resolveSeason(state) {
     default:        nextState = { ...state };
   }
 
+  // Apply maintenance workers (available every season — any unneeded workers can tend soil).
+  const maintenanceWorkers = state.assignments.maintenance || 0;
+  if (maintenanceWorkers > 0 && nextState.plots.length > 0) {
+    const maintPlots = clonePlots(nextState.plots);
+    const totalRestore = maintenanceWorkers * SOIL_RESTORE_PER_WORKER;
+    const restorePerPlot = totalRestore / maintPlots.length;
+    maintPlots.forEach((p) => {
+      p.soilHealth = clamp(p.soilHealth + restorePerPlot, 0, 100);
+    });
+    nextState = {
+      ...nextState,
+      plots: maintPlots,
+      log: pushLog(
+        nextState.log,
+        `${season} — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} maintained the fields, restoring ~${Math.round(restorePerPlot)} soil health per plot.`
+      ),
+    };
+  }
+
   // Advance calendar
   const nextSeasonIndex = (state.seasonIndex + 1) % SEASONS.length;
   const nextYear = nextSeasonIndex === 0 ? state.year + 1 : state.year;
 
-  // Bankruptcy: no money and no sellable product and no raw leaf to cure.
+  // Debt pressure: falling below $0 starts a foreclosure clock.
+  // If no inventory exists to recover from debt for multiple seasons, game over.
+  const debtSeasons = nextState.money < 0 ? (state.debtSeasons ?? 0) + 1 : 0;
+
+  if (nextState.money < 0) {
+    nextState.log = pushLog(
+      nextState.log,
+      `Creditors' patience thins — debt season ${debtSeasons}/${DEBT_FORECLOSURE_SEASONS}. Raise cash before foreclosure.`
+    );
+  }
+
   const isBankrupt =
-    nextState.money <= 0 &&
+    debtSeasons >= DEBT_FORECLOSURE_SEASONS &&
     nextState.resources.curedTobacco === 0 &&
     nextState.resources.rawTobacco === 0;
 
   if (isBankrupt) {
     nextState.log = pushLog(
       nextState.log,
-      "The creditors have come. With no tobacco to sell and no money left, the plantation is lost."
+      "The creditors have come. After repeated defaults and no leaf left to sell, the plantation is foreclosed."
     );
   }
 
-  // Preserve only the assignments relevant to the NEXT season; zero out
-  // the rest so they don't cause phantom over-assignment errors.
+  // Preserve each task assignment as player preference memory. Only active
+  // next-season tasks are constrained against each other for budget safety.
   const nextSeasonName = SEASONS[nextSeasonIndex];
   const nextActiveTasks = (SEASON_TASKS[nextSeasonName] ?? []);
   const preservedAssignments = {};
   Object.keys(nextState.assignments).forEach((key) => {
-    const val = nextActiveTasks.includes(key) ? nextState.assignments[key] : 0;
-    // Also clamp to current worker count in case workers changed.
-    preservedAssignments[key] = Math.min(val, nextState.workers);
+    // Clamp each remembered task to worker count in case workers changed.
+    preservedAssignments[key] = Math.min(nextState.assignments[key] || 0, nextState.workers);
   });
+
+  // Restore the player's explicit maintenance preference instead of inheriting
+  // the previous season's value (e.g. Winter all-curing sets maintenance to 0).
+  preservedAssignments["maintenance"] = Math.min(state.maintenanceTarget ?? 0, nextState.workers);
 
   // Clamp each active task so the total doesn't exceed workers.
   let runningTotal = 0;
@@ -330,6 +359,7 @@ export function resolveSeason(state) {
     seasonIndex: nextSeasonIndex,
     year: nextYear,
     assignments: preservedAssignments,
+    debtSeasons,
     gameOver: isBankrupt,
   };
 }
@@ -341,6 +371,6 @@ export function resolveSeason(state) {
  */
 export function getSellPrice(year) {
   const base = getTobaccoPrice(year);
-  const variance = (Math.random() - 0.5) * 2 * 0.5; // ±0.5¢
+  const variance = (Math.random() - 0.5) * 2 * PRICE_VARIANCE_CENTS;
   return Math.max(1, parseFloat((base + variance).toFixed(2)));
 }

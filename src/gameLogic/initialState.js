@@ -53,6 +53,13 @@ export function createInitialState() {
 
     log: [], // string[] — last N season event messages, newest first
 
+    // Consecutive seasons with negative cash. Used by foreclosure logic.
+    debtSeasons: 0,
+
+    // Player's explicit maintenance preference, persisted across season transitions.
+    // Prevents Winter's all-curing allocation from zeroing out Spring maintenance.
+    maintenanceTarget: 0,
+
     gameOver: false,
     victory: false,
   };
