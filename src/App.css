@@ -1,0 +1,348 @@
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.game-header {
+  background: var(--bg-panel);
+  border-bottom: 2px solid var(--accent-dim);
+  padding: 0.75rem 1.25rem 0.6rem;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.season-label {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--accent);
+  margin-right: 0.5rem;
+}
+
+.year-label {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+}
+
+.header-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.money-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  display: block;
+  text-align: right;
+}
+
+.money-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-head);
+}
+
+.money-value.money-low { color: var(--red); }
+
+/* Two-column game grid */
+.game-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem 0;
+  flex: 1;
+}
+
+@media (max-width: 720px) {
+  .game-grid { grid-template-columns: 1fr; }
+}
+
+.col-left, .col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Footer */
+.game-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-panel);
+  border-top: 2px solid var(--accent-dim);
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.footer-warning {
+  color: var(--red);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ── Panels ──────────────────────────────────────────────────────────────── */
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+}
+
+/* ── WorkforcePanel ──────────────────────────────────────────────────────── */
+
+.panel-meta {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+}
+
+.workers-remaining { color: var(--text); }
+.over-assigned     { color: var(--red); font-weight: bold; }
+
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.task-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: var(--text-head);
+  flex: 1;
+}
+
+.task-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.error-msg {
+  color: var(--red);
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+}
+
+/* ── LandPanel ───────────────────────────────────────────────────────────── */
+
+.plot-row {
+  display: grid;
+  grid-template-columns: 50px 70px 1fr 36px;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.plot-name  { font-size: 0.85rem; color: var(--text-dim); }
+.plot-state { font-size: 0.8rem; color: var(--text); font-style: italic; }
+
+.soil-bar-track {
+  height: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.soil-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.soil-good { background: var(--green); }
+.soil-warn { background: var(--yellow); }
+.soil-poor { background: var(--red); }
+
+.soil-pct {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* ── ResourcePanel ───────────────────────────────────────────────────────── */
+
+.resource-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.4rem;
+}
+
+.resource-name { font-size: 0.9rem; }
+
+.resource-value {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-head);
+}
+
+.resource-value.highlight { color: var(--accent); }
+
+.resource-hint {
+  font-size: 0.78rem;
+  color: var(--yellow);
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* ── MarketPanel ─────────────────────────────────────────────────────────── */
+
+.market-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.market-item {
+  font-size: 0.9rem;
+  color: var(--text-head);
+  margin: 0;
+}
+
+.market-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.market-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.75rem 0;
+}
+
+/* ── EventLog ────────────────────────────────────────────────────────────── */
+
+.log-empty {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.log-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.log-entry {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.4;
+}
+
+.log-entry-latest {
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.btn {
+  padding: 0.4rem 1rem;
+  border-radius: 3px;
+  border: 1px solid;
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-advance {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #f0e0b0;
+  padding: 0.55rem 1.5rem;
+  font-size: 0.95rem;
+}
+
+.btn-advance:not(:disabled):hover { opacity: 0.85; }
+
+.btn-sell {
+  background: var(--sell);
+  border-color: var(--green);
+  color: #d0f0c0;
+}
+
+.btn-sell:not(:disabled):hover { opacity: 0.8; }
+
+.btn-buy {
+  background: var(--buy);
+  border-color: #4a70b0;
+  color: #c0d8f0;
+}
+
+.btn-buy:not(:disabled):hover { opacity: 0.8; }
+
+/* ── Overlay screens (game over / victory) ───────────────────────────────── */
+
+.overlay-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  gap: 1rem;
+}
+
+.overlay-screen h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.overlay-screen p {
+  max-width: 520px;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.overlay-year {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--accent) !important;
+}
+
+.game-over h1  { color: var(--red); }
+.victory h1    { color: var(--accent); }
+
+.btn-new-game {
+  margin-top: 1rem;
+  padding: 0.6rem 2rem;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: #f0e0b0;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-new-game:hover { opacity: 0.85; }
+
