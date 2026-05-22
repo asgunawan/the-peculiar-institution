@@ -26,12 +26,15 @@ export default function WorkforcePanel({ workers, season, assignments, onChange 
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (assignments[t] || 0), 0);
   const remaining = workers - totalAssigned;
 
-  function handleChange(task, value) {
-    const parsed = Math.max(0, parseInt(value, 10) || 0);
+  function getMaxForTask(task) {
     const otherSum = activeTasks
       .filter((t) => t !== task)
       .reduce((sum, t) => sum + (assignments[t] || 0), 0);
-    const clamped = Math.min(parsed, workers - otherSum);
+    return Math.max(0, workers - otherSum);
+  }
+
+  function setTask(task, value) {
+    const clamped = Math.max(0, Math.min(getMaxForTask(task), value));
     onChange({ ...assignments, [task]: clamped });
   }
 
@@ -41,26 +44,59 @@ export default function WorkforcePanel({ workers, season, assignments, onChange 
       <p className="panel-meta">
         {workers} workers total &mdash;{" "}
         <span className={remaining < 0 ? "over-assigned" : "workers-remaining"}>
-          {remaining} unassigned
+          {remaining >= 0 ? `${remaining} unassigned` : `${Math.abs(remaining)} over limit`}
         </span>
       </p>
 
-      {activeTasks.map((task) => (
-        <div className="task-row" key={task}>
-          <label htmlFor={`task-${task}`} className="task-label">
-            {TASK_LABELS[task]}
-            <span className="task-hint">{TASK_HINTS[task]}</span>
-          </label>
-          <input
-            id={`task-${task}`}
-            type="number"
-            min={0}
-            max={workers}
-            value={assignments[task] || 0}
-            onChange={(e) => handleChange(task, e.target.value)}
-          />
-        </div>
-      ))}
+      {activeTasks.map((task) => {
+        const current = assignments[task] || 0;
+        const maxForTask = getMaxForTask(task);
+        return (
+          <div className="task-row" key={task}>
+            <div className="task-label">
+              {TASK_LABELS[task]}
+              <span className="task-hint">{TASK_HINTS[task]}</span>
+            </div>
+            <div className="task-controls">
+              <button
+                type="button"
+                className="btn-step btn-step-clear"
+                onClick={() => setTask(task, 0)}
+                disabled={current === 0}
+                title="Unassign all from this task"
+              >
+                ✕
+              </button>
+              <button
+                type="button"
+                className="btn-step"
+                onClick={() => setTask(task, current - 1)}
+                disabled={current <= 0}
+              >
+                −
+              </button>
+              <span className="task-count">{current}</span>
+              <button
+                type="button"
+                className="btn-step"
+                onClick={() => setTask(task, current + 1)}
+                disabled={current >= maxForTask}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="btn-inline-assign-all"
+                onClick={() => setTask(task, workers)}
+                disabled={current >= maxForTask}
+                title={`Assign all ${maxForTask} remaining workers here`}
+              >
+                All
+              </button>
+            </div>
+          </div>
+        );
+      })}
 
       {remaining < 0 && (
         <p className="error-msg">Over-assigned by {Math.abs(remaining)} worker(s). Reduce assignments.</p>

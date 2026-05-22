@@ -306,18 +306,30 @@ export function resolveSeason(state) {
     );
   }
 
+  // Preserve only the assignments relevant to the NEXT season; zero out
+  // the rest so they don't cause phantom over-assignment errors.
+  const nextSeasonName = SEASONS[nextSeasonIndex];
+  const nextActiveTasks = (SEASON_TASKS[nextSeasonName] ?? []);
+  const preservedAssignments = {};
+  Object.keys(nextState.assignments).forEach((key) => {
+    const val = nextActiveTasks.includes(key) ? nextState.assignments[key] : 0;
+    // Also clamp to current worker count in case workers changed.
+    preservedAssignments[key] = Math.min(val, nextState.workers);
+  });
+
+  // Clamp each active task so the total doesn't exceed workers.
+  let runningTotal = 0;
+  nextActiveTasks.forEach((key) => {
+    const clamped = Math.min(preservedAssignments[key] || 0, nextState.workers - runningTotal);
+    preservedAssignments[key] = Math.max(0, clamped);
+    runningTotal += preservedAssignments[key];
+  });
+
   return {
     ...nextState,
     seasonIndex: nextSeasonIndex,
     year: nextYear,
-    // Reset assignments for next season
-    assignments: {
-      planting: 0,
-      tending: 0,
-      harvesting: 0,
-      curing: 0,
-      maintenance: 0,
-    },
+    assignments: preservedAssignments,
     gameOver: isBankrupt,
   };
 }

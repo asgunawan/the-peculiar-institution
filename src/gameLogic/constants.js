@@ -72,7 +72,7 @@ export const PLOT_COST = 150;    // dollars to buy one additional plot
 
 // ── Starting conditions ─────────────────────────────────────────────────────
 export const STARTING_MONEY = 500;
-export const STARTING_WORKERS = 6;
+export const STARTING_WORKERS = 4;
 export const STARTING_PLOTS = 1;
 export const START_YEAR = 1780;
 

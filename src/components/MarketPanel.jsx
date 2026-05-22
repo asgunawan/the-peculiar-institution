@@ -5,11 +5,14 @@ export default function MarketPanel({
   money,
   curedTobacco,
   currentPrice,
+  onSellTen,
   onSellAll,
   onBuyWorker,
   onBuyPlot,
 }) {
-  const saleValue = (curedTobacco * currentPrice).toFixed(0);
+  const saleValue = ((curedTobacco * currentPrice) / 100).toFixed(2);
+  const tenLbAmount = Math.min(10, curedTobacco);
+  const tenLbValue = ((tenLbAmount * currentPrice) / 100).toFixed(2);
 
   return (
     <section className="panel market-panel">
@@ -22,13 +25,23 @@ export default function MarketPanel({
             {curedTobacco} lbs available ≈ ${saleValue}
           </p>
         </div>
-        <button
-          className="btn btn-sell"
-          onClick={onSellAll}
-          disabled={curedTobacco === 0}
-        >
-          Sell All
-        </button>
+        <div className="market-actions">
+          <button
+            className="btn btn-sell"
+            onClick={onSellTen}
+            disabled={curedTobacco === 0}
+            title={curedTobacco > 0 ? `Sell ${tenLbAmount} lbs for about $${tenLbValue}` : "No cured tobacco to sell"}
+          >
+            Sell 10 lbs
+          </button>
+          <button
+            className="btn btn-sell"
+            onClick={onSellAll}
+            disabled={curedTobacco === 0}
+          >
+            Sell All
+          </button>
+        </div>
       </div>
 
       <hr className="market-divider" />
