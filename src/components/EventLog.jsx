@@ -1,3 +1,5 @@
+import { getLogEntryText } from "../gameLogic/logUtils.js";
+
 // EventLog.jsx — Text feed of the last N season events, newest at top.
 export default function EventLog({ log }) {
   if (!log || log.length === 0) {
@@ -14,8 +16,11 @@ export default function EventLog({ log }) {
       <h2>Chronicle</h2>
       <ol className="log-list">
         {log.map((entry, i) => (
-          <li key={i} className={`log-entry ${i === 0 ? "log-entry-latest" : ""}`}>
-            {entry}
+          <li
+            key={entry && typeof entry === "object" && "id" in entry ? entry.id : `legacy-${i}-${String(entry)}`}
+            className={`log-entry ${i === 0 ? "log-entry-latest" : ""}`}
+          >
+            {getLogEntryText(entry)}
           </li>
         ))}
       </ol>

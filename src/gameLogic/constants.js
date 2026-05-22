@@ -70,6 +70,25 @@ export const PRICE_VARIANCE_CENTS = 0.75;
 export const WORKER_COST = 200;  // dollars to buy one additional worker
 export const PLOT_COST = 150;    // dollars to buy one additional plot
 
+// Ordered field names used when acquiring additional plots.
+export const FIELD_NAMES = [
+  "Home Field",
+  "North Quarter",
+  "River Bottom",
+  "Back Forty",
+  "Oak Ridge",
+  "Creek Side",
+  "Sandy Loam",
+  "Pine Hollow",
+  "Red Clay",
+  "Bottom Acre",
+  "Hilltop",
+  "Marsh Edge",
+  "East Clearing",
+  "West Hollow",
+  "Stone Row",
+];
+
 // Ongoing per-worker seasonal upkeep (food, clothing, basic care).
 // Applied every Winter as recurring financial pressure.
 export const SEASONAL_WORKER_UPKEEP = 7;

@@ -19,6 +19,7 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
   workers: number,         // total worker count (integer)
   plots: [{
     id: number,
+    name: string,
     soilHealth: number,    // 0–100
     cropType: "tobacco",
     state: "fallow"|"planted"|"tended",
@@ -26,7 +27,8 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
   }],
   resources: { rawTobacco: number, curedTobacco: number },
   assignments: { planting:n, tending:n, harvesting:n, curing:n, maintenance:n },
-  log: string[],           // newest first, max 20
+  log: [{ id:number, text:string }], // newest first, max 20
+  logCounter: number,      // next unique integer id for log entries
   gameOver: boolean,
   victory: boolean,
 }
@@ -35,8 +37,14 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
 ## Key files
 - `src/gameLogic/constants.js` — ALL tuning values. Never hardcode numbers elsewhere.
 - `src/gameLogic/initialState.js` — `createInitialState()` returns a fresh gameState.
+- `src/gameLogic/logUtils.js` — log normalization and push helpers for stable event IDs.
+- `src/gameLogic/taskHints.js` — shared task labels and hint formatting logic.
 - `src/gameLogic/seasonEngine.js` — `resolveSeason(state) → nextState` (pure). `getSellPrice(year) → cents`.
-- `src/App.jsx` — owns state, wires all components, handles all market actions.
+- `src/hooks/useGameSession.js` — state and localStorage persistence ownership.
+- `src/hooks/useMarketActions.js` — buy/sell/assignment callbacks.
+- `src/hooks/useSeasonAdvance.js` — season transition and outcome toasts.
+- `src/hooks/useToastNotifications.js` — transient UI toast state.
+- `src/App.jsx` — orchestrates hooks and component wiring.
 - Components receive props only, call callbacks only, own no game state.
 
 ## Conventions
@@ -44,7 +52,7 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
 - `assignments` are reset to 0 by `resolveSeason` after each season.
 - Raw tobacco rots if not cured in Winter — do not carry it forward.
 - Soil health clamps between 0 and 100.
-- Log entries: string[], newest first. Slice to 20.
+- Log entries are objects `{ id, text }`, newest first. Slice to 20.
 - Money: use `parseFloat((n).toFixed(2))` to avoid floating point drift.
 
 ## Historical accuracy rule

@@ -25,8 +25,7 @@ import {
   DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
 } from "./constants.js";
-
-const MAX_LOG_ENTRIES = 20;
+import { pushLog as pushStructuredLog } from "./logUtils.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -45,8 +44,20 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function pushLog(log, message) {
-  return [message, ...log].slice(0, MAX_LOG_ENTRIES);
+function createLogWriter(initialLog, initialCounter) {
+  let log = Array.isArray(initialLog) ? [...initialLog] : [];
+  let logCounter = Number.isFinite(initialCounter) && initialCounter > 0 ? initialCounter : 1;
+
+  return {
+    add(message) {
+      const next = pushStructuredLog(log, logCounter, message);
+      log = next.log;
+      logCounter = next.logCounter;
+    },
+    snapshot() {
+      return { log, logCounter };
+    },
+  };
 }
 
 // Deep-clone plots array so we never mutate input state.
@@ -64,15 +75,15 @@ function clonePlots(plots) {
 function resolveSpring(state) {
   const plots = clonePlots(state.plots);
   const { planting } = state.assignments;
-  let log = [...state.log];
+  const writer = createLogWriter(state.log, state.logCounter);
   let planted = 0;
 
   const fallowPlots = plots.filter((p) => p.state === "fallow");
 
   if (planting === 0) {
-    log = pushLog(log, "Spring — No workers assigned to planting. Fields lie idle.");
+    writer.add("Spring — No workers assigned to planting. Fields lie idle.");
   } else if (fallowPlots.length === 0) {
-    log = pushLog(log, "Spring — All plots already have standing crops.");
+    writer.add("Spring — All plots already have standing crops.");
   } else {
     // Each planting worker can cover one plot. Extra workers are wasted.
     const plotsToPlant = Math.min(planting, fallowPlots.length);
@@ -80,8 +91,7 @@ function resolveSpring(state) {
       fallowPlots[i].state = "planted";
       planted++;
     }
-    log = pushLog(
-      log,
+    writer.add(
       `Spring — ${planted} plot(s) planted with tobacco. ${
         fallowPlots.length - planted > 0
           ? `${fallowPlots.length - planted} plot(s) left unplanted (not enough workers).`
@@ -90,7 +100,8 @@ function resolveSpring(state) {
     );
   }
 
-  return { ...state, plots, log };
+  const { log, logCounter } = writer.snapshot();
+  return { ...state, plots, log, logCounter };
 }
 
 /**
@@ -101,13 +112,14 @@ function resolveSpring(state) {
 function resolveSummer(state) {
   const plots = clonePlots(state.plots);
   const { tending } = state.assignments;
-  let log = [...state.log];
+  const writer = createLogWriter(state.log, state.logCounter);
 
   const plantedPlots = plots.filter((p) => p.state === "planted");
 
   if (plantedPlots.length === 0) {
-    log = pushLog(log, "Summer — No planted crops to tend.");
-    return { ...state, plots, log };
+    writer.add("Summer — No planted crops to tend.");
+    const { log, logCounter } = writer.snapshot();
+    return { ...state, plots, log, logCounter };
   }
 
   const fullCoverageWorkers = plantedPlots.length * WORKERS_PER_PLOT_FULL_TEND;
@@ -119,8 +131,7 @@ function resolveSummer(state) {
   });
 
   const pct = Math.round(modifier * 100);
-  log = pushLog(
-    log,
+  writer.add(
     `Summer — ${plantedPlots.length} plot(s) tended at ${pct}% efficiency. ${
       modifier < 1.0
         ? `Assign ${Math.ceil(fullCoverageWorkers - tending)} more workers for full yield.`
@@ -128,7 +139,8 @@ function resolveSummer(state) {
     }`
   );
 
-  return { ...state, plots, log };
+  const { log, logCounter } = writer.snapshot();
+  return { ...state, plots, log, logCounter };
 }
 
 /**
@@ -140,24 +152,26 @@ function resolveSummer(state) {
 function resolveFall(state) {
   const plots = clonePlots(state.plots);
   const { harvesting } = state.assignments;
-  let log = [...state.log];
+  const writer = createLogWriter(state.log, state.logCounter);
   let rawGained = 0;
 
   const readyPlots = plots.filter((p) => p.state === "tended" || p.state === "planted");
 
   if (readyPlots.length === 0) {
-    log = pushLog(log, "Fall — Nothing to harvest.");
-    return { ...state, plots, log };
+    writer.add("Fall — Nothing to harvest.");
+    const { log, logCounter } = writer.snapshot();
+    return { ...state, plots, log, logCounter };
   }
 
   if (harvesting === 0) {
-    log = pushLog(log, "Fall — No workers assigned to harvest. Crops wilt in the field.");
+    writer.add("Fall — No workers assigned to harvest. Crops wilt in the field.");
     // Plots revert to fallow even if unharvested.
     readyPlots.forEach((p) => {
       p.state = "fallow";
       p.yieldModifier = 1.0;
     });
-    return { ...state, plots, log };
+    const { log, logCounter } = writer.snapshot();
+    return { ...state, plots, log, logCounter };
   }
 
   // Each harvesting worker can cover one plot per season.
@@ -182,8 +196,7 @@ function resolveFall(state) {
     readyPlots[i].yieldModifier = 1.0;
   }
 
-  log = pushLog(
-    log,
+  writer.add(
     `Fall — Harvest complete. Gathered ${rawGained} lbs of raw tobacco leaf from ${plotsToHarvest} plot(s).${
       readyPlots.length > plotsToHarvest
         ? ` ${readyPlots.length - plotsToHarvest} plot(s) not reached — crop lost.`
@@ -196,7 +209,8 @@ function resolveFall(state) {
     rawTobacco: state.resources.rawTobacco + rawGained,
   };
 
-  return { ...state, plots, resources, log };
+  const { log, logCounter } = writer.snapshot();
+  return { ...state, plots, resources, log, logCounter };
 }
 
 /**
@@ -209,13 +223,12 @@ function resolveFall(state) {
 function resolveWinter(state) {
   const plots = clonePlots(state.plots);
   const { curing } = state.assignments;
-  let log = [...state.log];
+  const writer = createLogWriter(state.log, state.logCounter);
   let { rawTobacco, curedTobacco } = state.resources;
   const upkeepCost = state.workers * SEASONAL_WORKER_UPKEEP;
   const moneyAfterUpkeep = parseFloat((state.money - upkeepCost).toFixed(2));
 
-  log = pushLog(
-    log,
+  writer.add(
     `Winter — Provisioning and upkeep cost $${upkeepCost.toFixed(2)} for ${state.workers} worker(s).`
   );
 
@@ -229,19 +242,17 @@ function resolveWinter(state) {
   rawTobacco = 0; // All remaining raw rots at end of winter.
 
   if (rawUsed > 0) {
-    log = pushLog(
-      log,
+    writer.add(
       `Winter — ${rawUsed} lbs of leaf cured into ${newCured} lbs of tobacco by ${curing} worker(s).`
     );
   }
   if (rawRotted > 0) {
-    log = pushLog(
-      log,
+    writer.add(
       `Winter — ${rawRotted} lbs of uncured raw leaf rotted. Assign more workers to curing next year.`
     );
   }
   if (rawUsed === 0 && rawTobacco === 0) {
-    log = pushLog(log, "Winter — No raw leaf to cure.");
+    writer.add("Winter — No raw leaf to cure.");
   }
 
 
@@ -249,11 +260,12 @@ function resolveWinter(state) {
 
   // ── Check for victory (cotton gin) ──────────────────────────────────────
   if (state.year === COTTON_GIN_YEAR - 1) {
-    log = pushLog(
-      log,
+    writer.add(
       `Winter ${state.year} — A letter arrives from New Haven, Connecticut. A young inventor named Eli Whitney has built a machine that separates cotton fiber from seed in minutes. An era is ending. A new one begins.`
     );
   }
+
+  const { log, logCounter } = writer.snapshot();
 
   return {
     ...state,
@@ -261,6 +273,7 @@ function resolveWinter(state) {
     plots,
     resources,
     log,
+    logCounter,
     victory: state.year >= COTTON_GIN_YEAR,
   };
 }
@@ -295,13 +308,16 @@ export function resolveSeason(state) {
     maintPlots.forEach((p) => {
       p.soilHealth = clamp(p.soilHealth + restorePerPlot, 0, 100);
     });
+    const maintenanceLog = pushStructuredLog(
+      nextState.log,
+      nextState.logCounter,
+      `${season} — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} maintained the fields, restoring ~${Math.round(restorePerPlot)} soil health per plot.`
+    );
     nextState = {
       ...nextState,
       plots: maintPlots,
-      log: pushLog(
-        nextState.log,
-        `${season} — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} maintained the fields, restoring ~${Math.round(restorePerPlot)} soil health per plot.`
-      ),
+      log: maintenanceLog.log,
+      logCounter: maintenanceLog.logCounter,
     };
   }
 
@@ -314,10 +330,13 @@ export function resolveSeason(state) {
   const debtSeasons = nextState.money < 0 ? (state.debtSeasons ?? 0) + 1 : 0;
 
   if (nextState.money < 0) {
-    nextState.log = pushLog(
+    const debtLog = pushStructuredLog(
       nextState.log,
+      nextState.logCounter,
       `Creditors' patience thins — debt season ${debtSeasons}/${DEBT_FORECLOSURE_SEASONS}. Raise cash before foreclosure.`
     );
+    nextState.log = debtLog.log;
+    nextState.logCounter = debtLog.logCounter;
   }
 
   const isBankrupt =
@@ -326,10 +345,13 @@ export function resolveSeason(state) {
     nextState.resources.rawTobacco === 0;
 
   if (isBankrupt) {
-    nextState.log = pushLog(
+    const bankruptLog = pushStructuredLog(
       nextState.log,
+      nextState.logCounter,
       "The creditors have come. After repeated defaults and no leaf left to sell, the plantation is foreclosed."
     );
+    nextState.log = bankruptLog.log;
+    nextState.logCounter = bankruptLog.logCounter;
   }
 
   // Preserve each task assignment as player preference memory. Only active

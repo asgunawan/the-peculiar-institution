@@ -19,29 +19,38 @@ Open `http://localhost:5173` in your browser.
 
 ```
 src/
+├── hooks/
+│   ├── useGameSession.js   Save/load and persistent game session state.
+│   ├── useMarketActions.js Buy/sell/assignment callbacks.
+│   ├── useSeasonAdvance.js Season resolution + confirmation + outcome toasts.
+│   └── useToastNotifications.js UI toast queue with auto-dismiss.
 ├── gameLogic/
 │   ├── constants.js       All tuning values and historical data (prices, rates, thresholds).
 │   ├── initialState.js    Factory function for a fresh gameState object.
+│   ├── logUtils.js        Structured event-log helpers and normalization.
+│   ├── taskHints.js       Shared task label/hint formatting helpers.
 │   └── seasonEngine.js    Pure function: resolveSeason(state) → nextState.
 │                          No React imports. Fully testable in isolation.
 └── components/
+  ├── ErrorBoundary.jsx   Crash-safe fallback UI wrapper.
     ├── GameHeader.jsx      Year, season, money display.
     ├── WorkforcePanel.jsx  Worker assignment inputs, validates sum ≤ total workers.
     ├── LandPanel.jsx       Plots with soil health bars (green/yellow/red).
     ├── ResourcePanel.jsx   Raw tobacco and cured tobacco stock.
     ├── MarketPanel.jsx     Sell cured tobacco; buy workers and land.
     └── EventLog.jsx        Text feed of last 20 season events.
-App.jsx owns all state. Components are pure — they receive props and call callbacks.
+  App.jsx coordinates hooks + components. Components remain prop-driven and callback-driven.
 ```
 
 ### Data Flow
 
 ```
-App.jsx (useState)
-  → passes state slices to each component as props
-  → receives onChange / onAction callbacks from components
-  → calls resolveSeason(state) on "Advance Season"
-  → updates state with returned nextState
+App.jsx (orchestration)
+  → useGameSession manages state + localStorage persistence
+  → useMarketActions handles assignment/sell/buy callbacks
+  → useSeasonAdvance resolves seasons + toast side effects
+  → useToastNotifications manages transient UI notifications
+  → props flow into components and callbacks flow back to hooks
 ```
 
 ### gameState Shape
@@ -54,6 +63,7 @@ App.jsx (useState)
   workers: 6,             // total worker count
   plots: [{
     id: 1,
+    name: "Home Field",
     soilHealth: 100,      // 0–100; degrades each harvest
     cropType: "tobacco",
     state: "fallow",      // fallow | planted | tended
@@ -70,7 +80,8 @@ App.jsx (useState)
     curing: 0,
     maintenance: 0,
   },
-  log: [],                // string[], newest first, max 20 entries
+  log: [{ id: 1, text: "..." }], // newest first, max 20 entries
+  logCounter: 2,          // next unique ID used for log entries
   gameOver: false,
   victory: false,
 }

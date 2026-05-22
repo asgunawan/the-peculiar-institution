@@ -52,7 +52,8 @@ export function createInitialState() {
       maintenance: 0,
     },
 
-    log: [], // string[] — last N season event messages, newest first
+    log: [], // Array<{id:number,text:string}> newest first, max 20
+    logCounter: 1, // next unique integer ID for log entries
 
     // Consecutive seasons with negative cash. Used by foreclosure logic.
     debtSeasons: 0,
