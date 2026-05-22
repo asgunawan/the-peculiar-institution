@@ -75,6 +75,18 @@ function getTaskHint(task, count, plots, season) {
   return STATIC_HINTS[task] ?? "";
 }
 
+function getYieldClass(efficiencyPercent) {
+  if (efficiencyPercent >= 95) return "yield-high";
+  if (efficiencyPercent >= 50) return "yield-mid";
+  return "yield-low";
+}
+
+function getTendingEfficiency(count, plots) {
+  const fullNeeded = plots.length * WORKERS_PER_PLOT_FULL_TEND;
+  if (fullNeeded <= 0) return 0;
+  return Math.round(Math.min(count / fullNeeded, 1) * 100);
+}
+
 export default function WorkforcePanel({ workers, season, assignments, plots, onChange }) {
   const activeTasks = SEASON_TASKS[season] ?? [];
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (assignments[t] || 0), 0);
@@ -105,11 +117,25 @@ export default function WorkforcePanel({ workers, season, assignments, plots, on
       {activeTasks.map((task) => {
         const current = assignments[task] || 0;
         const maxForTask = getMaxForTask(task);
+        const isTendingWithAllocation = task === TASKS.TENDING && current > 0;
+        const tendingEfficiency = isTendingWithAllocation
+          ? getTendingEfficiency(current, plots)
+          : 0;
         return (
           <div className="task-row" key={task}>
             <div className="task-label">
               {getTaskLabel(task, season)}
-              <span className="task-hint">{getTaskHint(task, assignments[task] || 0, plots, season)}</span>
+              <span className="task-hint">
+                {isTendingWithAllocation ? (
+                  <>
+                    {`${current}/${Math.ceil(plots.length * WORKERS_PER_PLOT_FULL_TEND)} workers \u2192 ~`}
+                    <span className={getYieldClass(tendingEfficiency)}>{tendingEfficiency}%</span>
+                    {" yield this Fall."}
+                  </>
+                ) : (
+                  getTaskHint(task, assignments[task] || 0, plots, season)
+                )}
+              </span>
             </div>
             <div className="task-controls">
               <button

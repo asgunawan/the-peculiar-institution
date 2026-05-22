@@ -19,7 +19,7 @@ export default function MarketPanel({
       <h2>Market</h2>
 
       <div className="market-row">
-        <div>
+        <div className="market-copy">
           <p className="market-item">Tobacco &mdash; {currentPrice}¢ / lb</p>
           <p className="market-sub">
             {curedTobacco} lbs available ≈ ${saleValue}
@@ -47,9 +47,9 @@ export default function MarketPanel({
       <hr className="market-divider" />
 
       <div className="market-row">
-        <div>
+        <div className="market-copy">
           <p className="market-item">Buy a Worker</p>
-          <p className="market-sub">${WORKER_COST} each</p>
+          <p className="market-sub">${WORKER_COST} each &mdash; keeps fields planted, tended, and harvested on time.</p>
         </div>
         <button
           className="btn btn-buy"
@@ -61,9 +61,9 @@ export default function MarketPanel({
       </div>
 
       <div className="market-row">
-        <div>
+        <div className="market-copy">
           <p className="market-item">Buy a Plot of Land</p>
-          <p className="market-sub">${PLOT_COST} each</p>
+          <p className="market-sub">${PLOT_COST} each &mdash; expands acreage with fresh, high-yield soil.</p>
         </div>
         <button
           className="btn btn-buy"

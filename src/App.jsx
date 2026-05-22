@@ -2,7 +2,14 @@
 import { useState, useCallback, useEffect } from "react";
 import { createInitialState } from "./gameLogic/initialState.js";
 import { resolveSeason, getSellPrice } from "./gameLogic/seasonEngine.js";
-import { SEASONS, SEASON_TASKS, WORKER_COST, PLOT_COST } from "./gameLogic/constants.js";
+import {
+  SEASONS,
+  SEASON_TASKS,
+  WORKER_COST,
+  PLOT_COST,
+  CURING_RATIO,
+  SOIL_RESTORE_PER_WORKER,
+} from "./gameLogic/constants.js";
 import GameHeader from "./components/GameHeader.jsx";
 import WorkforcePanel from "./components/WorkforcePanel.jsx";
 import LandPanel from "./components/LandPanel.jsx";
@@ -12,6 +19,23 @@ import EventLog from "./components/EventLog.jsx";
 import "./App.css";
 
 const SAVE_KEY = "the-peculiar-institution-save-v1";
+const FIELD_NAMES = [
+  "Home Field",
+  "North Quarter",
+  "River Bottom",
+  "Back Forty",
+  "Oak Ridge",
+  "Creek Side",
+  "Sandy Loam",
+  "Pine Hollow",
+  "Red Clay",
+  "Bottom Acre",
+  "Hilltop",
+  "Marsh Edge",
+  "East Clearing",
+  "West Hollow",
+  "Stone Row",
+];
 
 function loadSavedSession() {
   const fresh = createInitialState();
@@ -42,6 +66,15 @@ export default function App() {
   const [seed] = useState(loadSavedSession);
   const [state, setState] = useState(seed.state);
   const [currentPrice, setCurrentPrice] = useState(seed.currentPrice);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((text, color = "accent") => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, text, color }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 1800);
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -75,40 +108,61 @@ export default function App() {
       if (!proceed) return;
     }
 
-    setState((s) => {
-      const next = resolveSeason(s);
-      setCurrentPrice(getSellPrice(next.year));
-      return next;
-    });
-  }, [state]);
+    const next = resolveSeason(state);
+    const rawGained = next.resources.rawTobacco - state.resources.rawTobacco;
+    const curedGained = next.resources.curedTobacco - state.resources.curedTobacco;
+    const moneyDelta = next.money - state.money;
+
+    if (rawGained > 0) {
+      addToast(`+${rawGained.toLocaleString()} lbs raw leaf`, "accent");
+    }
+    if (curedGained > 0) {
+      addToast(`+${curedGained.toLocaleString()} lbs cured`, "green");
+    }
+
+    if (currentSeason === "Winter") {
+      const rawUsedForCuring = Math.max(0, curedGained) * CURING_RATIO;
+      const rawRotted = Math.max(0, state.resources.rawTobacco - rawUsedForCuring - next.resources.rawTobacco);
+      if (rawRotted > 0) {
+        addToast(`-${rawRotted.toLocaleString()} lbs rotted`, "red");
+      }
+    }
+
+    if (moneyDelta < 0) {
+      addToast(`-$${Math.abs(moneyDelta).toFixed(2)} upkeep`, "red");
+    }
+
+    setState(next);
+    setCurrentPrice(getSellPrice(next.year));
+  }, [state, addToast]);
 
   const handleSellTobacco = useCallback((requestedLbs) => {
-    setState((s) => {
-      const available = s.resources.curedTobacco;
-      const lbsToSell =
-        requestedLbs === "all"
-          ? available
-          : Math.min(available, Math.max(0, requestedLbs));
+    const available = state.resources.curedTobacco;
+    const lbsToSell =
+      requestedLbs === "all"
+        ? available
+        : Math.min(available, Math.max(0, requestedLbs));
 
-      if (lbsToSell <= 0) return s;
+    if (lbsToSell <= 0) return;
 
-      // price is cents/lb; convert to dollars
-      const earnedDollars = parseFloat(
-        ((lbsToSell * currentPrice) / 100).toFixed(2)
-      );
-      const remaining = available - lbsToSell;
+    // price is cents/lb; convert to dollars
+    const earnedDollars = parseFloat(
+      ((lbsToSell * currentPrice) / 100).toFixed(2)
+    );
+    const remaining = available - lbsToSell;
 
-      return {
-        ...s,
-        money: parseFloat((s.money + earnedDollars).toFixed(2)),
-        resources: { ...s.resources, curedTobacco: remaining },
-        log: [
-          `Sold ${lbsToSell} lbs of tobacco at ${currentPrice}¢/lb for $${earnedDollars.toFixed(2)}. ${remaining} lbs remain in storage.`,
-          ...s.log,
-        ].slice(0, 20),
-      };
+    setState({
+      ...state,
+      money: parseFloat((state.money + earnedDollars).toFixed(2)),
+      resources: { ...state.resources, curedTobacco: remaining },
+      log: [
+        `Sold ${lbsToSell} lbs of tobacco at ${currentPrice}¢/lb for $${earnedDollars.toFixed(2)}. ${remaining} lbs remain in storage.`,
+        ...state.log,
+      ].slice(0, 20),
     });
-  }, [currentPrice]);
+
+    addToast(`+$${earnedDollars.toFixed(2)}`, "green");
+  }, [state, currentPrice, addToast]);
 
   const handleSellTen = useCallback(() => {
     handleSellTobacco(10);
@@ -119,32 +173,43 @@ export default function App() {
   }, [handleSellTobacco]);
 
   const handleBuyWorker = useCallback(() => {
-    setState((s) => {
-      if (s.money < WORKER_COST) return s;
-      return {
-        ...s,
-        money: parseFloat((s.money - WORKER_COST).toFixed(2)),
-        workers: s.workers + 1,
-        log: [`Purchased one additional worker for $${WORKER_COST}.`, ...s.log].slice(0, 20),
-      };
+    if (state.money < WORKER_COST) return;
+
+    setState({
+      ...state,
+      money: parseFloat((state.money - WORKER_COST).toFixed(2)),
+      workers: state.workers + 1,
+      log: [`Purchased one additional worker for $${WORKER_COST}.`, ...state.log].slice(0, 20),
     });
-  }, []);
+
+    addToast("+1 worker hired", "accent");
+  }, [state, addToast]);
 
   const handleBuyPlot = useCallback(() => {
-    setState((s) => {
-      if (s.money < PLOT_COST) return s;
-      const newId = s.plots.length + 1;
-      return {
-        ...s,
-        money: parseFloat((s.money - PLOT_COST).toFixed(2)),
-        plots: [
-          ...s.plots,
-          { id: newId, soilHealth: 100, cropType: "tobacco", state: "fallow", yieldModifier: 1.0 },
-        ],
-        log: [`Acquired Plot ${newId} — virgin land, full soil health.`, ...s.log].slice(0, 20),
-      };
+    if (state.money < PLOT_COST) return;
+
+    const newId = state.plots.length + 1;
+    const chosenName = FIELD_NAMES[(newId - 1) % FIELD_NAMES.length];
+
+    setState({
+      ...state,
+      money: parseFloat((state.money - PLOT_COST).toFixed(2)),
+      plots: [
+        ...state.plots,
+        {
+          id: newId,
+          name: chosenName,
+          soilHealth: 100,
+          cropType: "tobacco",
+          state: "fallow",
+          yieldModifier: 1.0,
+        },
+      ],
+      log: [`Acquired ${chosenName} (Plot ${newId}) — virgin land, full soil health.`, ...state.log].slice(0, 20),
     });
-  }, []);
+
+    addToast(`+1 plot acquired (${chosenName})`, "accent");
+  }, [state, addToast]);
 
   const handleNewGame = useCallback(() => {
     const fresh = createInitialState();
@@ -153,6 +218,9 @@ export default function App() {
   }, []);
 
   const season = SEASONS[state.seasonIndex];
+  const maintenanceSoilGain = state.plots.length > 0
+    ? Math.round(((state.assignments.maintenance || 0) * SOIL_RESTORE_PER_WORKER) / state.plots.length)
+    : 0;
   // Only count tasks active in this season — other keys are stale from prior seasons.
   const activeTasks = SEASON_TASKS[season] ?? [];
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (state.assignments[t] || 0), 0);
@@ -201,7 +269,7 @@ export default function App() {
             plots={state.plots}
             onChange={handleAssignmentChange}
           />
-          <LandPanel plots={state.plots} />
+          <LandPanel plots={state.plots} maintenanceSoilGain={maintenanceSoilGain} />
         </div>
         <div className="col-right">
           <ResourcePanel resources={state.resources} />
@@ -246,6 +314,13 @@ export default function App() {
           Reset Game
         </button>
       </footer>
+      <div className="toast-overlay" aria-live="polite" aria-atomic="false">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`toast toast-${toast.color}`}>
+            {toast.text}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

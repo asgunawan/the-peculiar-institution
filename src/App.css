@@ -196,6 +196,21 @@
   font-style: italic;
 }
 
+.yield-high {
+  color: var(--green);
+  font-weight: bold;
+}
+
+.yield-mid {
+  color: var(--yellow);
+  font-weight: bold;
+}
+
+.yield-low {
+  color: var(--red);
+  font-weight: bold;
+}
+
 .error-msg {
   color: var(--red);
   font-size: 0.82rem;
@@ -206,7 +221,7 @@
 
 .plot-row {
   display: grid;
-  grid-template-columns: 50px 70px 1fr 36px;
+  grid-template-columns: 130px 70px 1fr 78px;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
@@ -216,6 +231,7 @@
 .plot-state { font-size: 0.8rem; color: var(--text); font-style: italic; }
 
 .soil-bar-track {
+  display: flex;
   height: 10px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -232,6 +248,13 @@
 .soil-good { background: var(--green); }
 .soil-warn { background: var(--yellow); }
 .soil-poor { background: var(--red); }
+
+.soil-bar-preview {
+  height: 100%;
+  background: rgba(90, 138, 64, 0.4);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.4s ease;
+}
 
 .soil-pct {
   font-size: 0.78rem;
@@ -270,15 +293,25 @@
 .market-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+}
+
+.market-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  margin: 0;
+  padding: 0;
+  text-align: left;
 }
 
 .market-actions {
   display: flex;
   gap: 0.45rem;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .market-item {
@@ -430,4 +463,72 @@
 }
 
 .btn-reset:hover { opacity: 1; }
+
+/* ── Floating Toasts ─────────────────────────────────────────────────────── */
+
+.toast-overlay {
+  position: fixed;
+  left: 24px;
+  bottom: 92px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.toast {
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: toast-rise 1.8s ease forwards;
+}
+
+.toast-green {
+  background: rgba(30, 60, 20, 0.92);
+  color: #a0e080;
+}
+
+.toast-accent {
+  background: rgba(60, 40, 15, 0.92);
+  color: #e8b060;
+}
+
+.toast-red {
+  background: rgba(60, 15, 10, 0.92);
+  color: #e08060;
+}
+
+@keyframes toast-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-36px);
+  }
+}
+
+@media (max-width: 720px) {
+  .plot-row {
+    grid-template-columns: 110px 66px 1fr 72px;
+  }
+
+  .toast-overlay {
+    left: 14px;
+    bottom: 82px;
+  }
+}
 

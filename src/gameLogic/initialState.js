@@ -17,6 +17,7 @@ import {
 function buildStartingPlots(count) {
   return Array.from({ length: count }, (_, i) => ({
     id: i + 1,
+    name: i === 0 ? "Home Field" : `Plot ${i + 1}`,
     soilHealth: 100,   // 0–100; degrades each harvest, restored by maintenance
     cropType: "tobacco",
     // state: "fallow" | "planted" | "tended" | "harvestable"
