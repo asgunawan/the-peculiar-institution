@@ -18,7 +18,7 @@ export function useSeasonAdvance({ state, setState, setCurrentPrice, addToast })
       (sum, task) => sum + (state.assignments[task] || 0),
       0
     );
-    const unassignedWorkersNow = Math.max(0, state.workers - assignedNow);
+    const unassignedWorkersNow = Math.max(0, state.workers.length - assignedNow);
 
     if (unassignedWorkersNow > 0) {
       const proceed = window.confirm(

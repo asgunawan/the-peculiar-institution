@@ -67,7 +67,10 @@ export const TOBACCO_PRICE_CURVE = [
 export const PRICE_VARIANCE_CENTS = 0.75;
 
 // ── Economy ─────────────────────────────────────────────────────────────────
-export const WORKER_COST = 200;  // dollars to buy one additional worker
+// Upfront purchase cost for an enslaved worker at auction.
+export const ENSLAVED_PURCHASE_COST = 200; // dollars; gameplay-scaled (historical ~$300–600 in 1780s)
+// Upfront cost to hire a free worker — none, but wages are ongoing.
+export const FREE_WORKER_HIRE_COST = 0;
 export const PLOT_COST = 150;    // dollars to buy one additional plot
 
 // Ordered field names used when acquiring additional plots.
@@ -89,9 +92,11 @@ export const FIELD_NAMES = [
   "Stone Row",
 ];
 
-// Ongoing per-worker seasonal upkeep (food, clothing, basic care).
-// Applied every Winter as recurring financial pressure.
-export const SEASONAL_WORKER_UPKEEP = 7;
+// Seasonal cost per enslaved worker (food, clothing, basic care).
+export const ENSLAVED_UPKEEP_PER_SEASON = 7;
+// Seasonal wage per free worker. Historically ~2x the cost of enslaved upkeep
+// due to wage rates in the antebellum South. (concept.txt research: 2x labor cost)
+export const FREE_WORKER_WAGE_PER_SEASON = 15;
 
 // Gameplay-scaled: allow one extra recovery season before foreclosure when
 // inventory is exhausted, so debt pressure is sustained but less abrupt.

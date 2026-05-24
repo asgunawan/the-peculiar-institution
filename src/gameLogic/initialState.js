@@ -11,6 +11,18 @@ import {
 } from "./constants.js";
 
 /**
+ * Creates the starting pool of workers.
+ * All workers begin enslaved — historically accurate for a 1780 Virginia tobacco planter.
+ * type: "enslaved" | "free"
+ */
+function buildStartingWorkers(count) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    type: "enslaved",
+  }));
+}
+
+/**
  * Generates the array of starting plots.
  * Each plot tracks its own soil health and crop state independently.
  */
@@ -33,7 +45,7 @@ export function createInitialState() {
     get season() { return SEASONS[this.seasonIndex]; },
 
     money: STARTING_MONEY,
-    workers: STARTING_WORKERS,
+    workers: buildStartingWorkers(STARTING_WORKERS),
 
     plots: buildStartingPlots(STARTING_PLOTS),
 

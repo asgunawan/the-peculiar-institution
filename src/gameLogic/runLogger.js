@@ -21,7 +21,9 @@ let _log = _tryLoad();
 function _snapshot(s) {
   return {
     money: s.money,
-    workers: s.workers,
+    workers: s.workers.length,
+    enslavedCount: s.workers.filter(w => w.type === "enslaved").length,
+    freeCount: s.workers.filter(w => w.type === "free").length,
     plots: s.plots.map((p) => ({
       id: p.id,
       name: p.name,
@@ -48,7 +50,9 @@ export function logSeason(before, after) {
     before: _snapshot(before),
     after: {
       money: after.money,
-      workers: after.workers,
+      workers: after.workers.length,
+      enslavedCount: after.workers.filter(w => w.type === "enslaved").length,
+      freeCount: after.workers.filter(w => w.type === "free").length,
       plots: after.plots.map((p) => ({
         id: p.id,
         name: p.name,

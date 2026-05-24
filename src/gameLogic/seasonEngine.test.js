@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEBT_FORECLOSURE_SEASONS } from "./constants.js";
+import { DEBT_FORECLOSURE_SEASONS, ENSLAVED_UPKEEP_PER_SEASON } from "./constants.js";
 import { createInitialState } from "./initialState.js";
 import { resolveSeason } from "./seasonEngine.js";
 
@@ -88,5 +88,69 @@ describe("resolveSeason", () => {
 
     expect(next.debtSeasons).toBe(DEBT_FORECLOSURE_SEASONS);
     expect(next.gameOver).toBe(false);
+  });
+
+  it("free workers do not contribute to Winter upkeep cost", () => {
+    const startMoney = 500;
+
+    const enslaved = createState({
+      seasonIndex: 3, // Winter — upkeep is deducted
+      money: startMoney,
+      workers: [{ id: 1, type: "enslaved" }],
+      assignments: { curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const mixed = createState({
+      seasonIndex: 3,
+      money: startMoney,
+      workers: [{ id: 1, type: "enslaved" }, { id: 2, type: "free" }],
+      assignments: { curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const nextEnslaved = resolveSeason(enslaved);
+    const nextMixed = resolveSeason(mixed);
+
+    // Free workers are paid at hire — only enslaved upkeep is deducted in Winter.
+    expect(startMoney - nextEnslaved.money).toBe(ENSLAVED_UPKEEP_PER_SEASON);
+    expect(startMoney - nextMixed.money).toBe(ENSLAVED_UPKEEP_PER_SEASON);
+  });
+
+  it("free workers are removed from workforce after each season resolves", () => {
+    const state = createState({
+      seasonIndex: 0, // Spring
+      workers: [
+        { id: 1, type: "enslaved" },
+        { id: 2, type: "free" },
+        { id: 3, type: "free" },
+      ],
+      assignments: { planting: 0, tending: 0, harvesting: 0, curing: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+
+    expect(next.workers.length).toBe(1);
+    expect(next.workers[0].type).toBe("enslaved");
+  });
+
+  it("mixed workforce only charges enslaved upkeep in Winter", () => {
+    const startMoney = 500;
+    const state = createState({
+      seasonIndex: 3,
+      money: startMoney,
+      workers: [
+        { id: 1, type: "enslaved" },
+        { id: 2, type: "enslaved" },
+        { id: 3, type: "free" },
+      ],
+      assignments: { curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const next = resolveSeason(state);
+    const expectedCost = 2 * ENSLAVED_UPKEEP_PER_SEASON;
+
+    expect(parseFloat((startMoney - next.money).toFixed(2))).toBe(expectedCost);
   });
 });

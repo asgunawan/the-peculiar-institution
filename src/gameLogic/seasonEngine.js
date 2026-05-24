@@ -21,7 +21,7 @@ import {
   WORKERS_PER_PLOT_FULL_TEND,
   TOBACCO_PRICE_CURVE,
   PRICE_VARIANCE_CENTS,
-  SEASONAL_WORKER_UPKEEP,
+  ENSLAVED_UPKEEP_PER_SEASON,
   DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
 } from "./constants.js";
@@ -225,11 +225,17 @@ function resolveWinter(state) {
   const { curing } = state.assignments;
   const writer = createLogWriter(state.log, state.logCounter);
   let { rawTobacco, curedTobacco } = state.resources;
-  const upkeepCost = state.workers * SEASONAL_WORKER_UPKEEP;
+  const upkeepCost = parseFloat(
+    state.workers.reduce(
+      (sum, w) => sum + (w.type === "enslaved" ? ENSLAVED_UPKEEP_PER_SEASON : 0),
+      0
+    ).toFixed(2)
+  );
+  const enslaved = state.workers.filter(w => w.type === "enslaved").length;
   const moneyAfterUpkeep = parseFloat((state.money - upkeepCost).toFixed(2));
 
   writer.add(
-    `Winter — Provisioning and upkeep cost $${upkeepCost.toFixed(2)} for ${state.workers} worker(s).`
+    `Winter — Provisioning for ${enslaved} enslaved worker${enslaved !== 1 ? "s" : ""} cost $${upkeepCost.toFixed(2)}.`
   );
 
   // ── Curing ─────────────────────────────────────────────────────────────
@@ -352,6 +358,9 @@ export function resolveSeason(state) {
     nextState.logCounter = bankruptLog.logCounter;
   }
 
+  // Seasonal free workers return home after each season — they were paid at hire time.
+  nextState = { ...nextState, workers: nextState.workers.filter(w => w.type !== "free") };
+
   // Preserve each task assignment as player preference memory. Only active
   // next-season tasks are constrained against each other for budget safety.
   const nextSeasonName = SEASONS[nextSeasonIndex];
@@ -359,17 +368,17 @@ export function resolveSeason(state) {
   const preservedAssignments = {};
   Object.keys(nextState.assignments).forEach((key) => {
     // Clamp each remembered task to worker count in case workers changed.
-    preservedAssignments[key] = Math.min(nextState.assignments[key] || 0, nextState.workers);
+    preservedAssignments[key] = Math.min(nextState.assignments[key] || 0, nextState.workers.length);
   });
 
   // Restore the player's explicit maintenance preference instead of inheriting
   // the previous season's value (e.g. Winter all-curing sets maintenance to 0).
-  preservedAssignments["maintenance"] = Math.min(state.maintenanceTarget ?? 0, nextState.workers);
+  preservedAssignments["maintenance"] = Math.min(state.maintenanceTarget ?? 0, nextState.workers.length);
 
   // Clamp each active task so the total doesn't exceed workers.
   let runningTotal = 0;
   nextActiveTasks.forEach((key) => {
-    const clamped = Math.min(preservedAssignments[key] || 0, nextState.workers - runningTotal);
+    const clamped = Math.min(preservedAssignments[key] || 0, nextState.workers.length - runningTotal);
     preservedAssignments[key] = Math.max(0, clamped);
     runningTotal += preservedAssignments[key];
   });
