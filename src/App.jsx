@@ -28,7 +28,7 @@ import "./App.css";
 const SAVE_KEY = "the-peculiar-institution-save-v1";
 
 export default function App() {
-  const { state, setState, currentPrice, setCurrentPrice, resetGame } = useGameSession(SAVE_KEY);
+  const { state, setState, currentPrice, setCurrentPrice, resetGame, handleTogglePlotRest } = useGameSession(SAVE_KEY);
   const { toasts, addToast } = useToastNotifications();
   const [overlayDismissed, setOverlayDismissed] = useState(false);
 
@@ -59,7 +59,8 @@ export default function App() {
     window.getRunLog = getLog;
   }, []);
 
-  const maintenanceSoilGain = state.plots.length > 0
+  // Maintenance only restores soil in Winter — preview is misleading in other seasons.
+  const maintenanceSoilGain = (season === "Winter" && state.plots.length > 0)
     ? Math.round(((state.assignments.maintenance || 0) * SOIL_RESTORE_PER_WORKER) / state.plots.length)
     : 0;
   // Only count tasks active in this season — other keys are stale from prior seasons.
@@ -231,7 +232,7 @@ export default function App() {
               plots={state.plots}
               onChange={handleAssignmentChange}
             />
-            <LandPanel plots={state.plots} maintenanceSoilGain={maintenanceSoilGain} />
+            <LandPanel plots={state.plots} maintenanceSoilGain={maintenanceSoilGain} onTogglePlotRest={handleTogglePlotRest} />
           </div>
           <div className="col-right">
             <ResourcePanel resources={state.resources} />

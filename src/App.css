@@ -221,14 +221,17 @@
 
 .plot-row {
   display: grid;
-  grid-template-columns: 130px 70px 1fr 78px;
+  grid-template-columns: 130px 70px 1fr 78px auto;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
+.plot-row.plot-resting { opacity: 0.75; }
+
 .plot-name  { font-size: 0.85rem; color: var(--text-dim); }
 .plot-state { font-size: 0.8rem; color: var(--text); font-style: italic; }
+.plot-state.plot-state-resting { color: var(--text-dim); font-style: italic; }
 
 .soil-bar-track {
   display: flex;
@@ -261,6 +264,32 @@
   color: var(--text-dim);
   text-align: right;
 }
+
+.fallow-recovery-hint {
+  font-size: 0.72rem;
+  color: var(--green);
+  opacity: 0.8;
+}
+
+.btn-plot-rest {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-plot-rest:hover { border-color: var(--text-dim); color: var(--text); }
+
+.btn-plot-rest--active {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.btn-plot-rest--active:hover { border-color: var(--green); color: var(--green); }
 
 /* ── ResourcePanel ───────────────────────────────────────────────────────── */
 

@@ -35,6 +35,7 @@ function buildStartingPlots(count) {
     // state: "fallow" | "planted" | "tended" | "harvestable"
     state: "fallow",
     yieldModifier: 1.0, // set during Summer tending, consumed during Fall harvest
+    resting: false,     // if true, Spring planting skips this plot (fallow rotation)
   }));
 }
 

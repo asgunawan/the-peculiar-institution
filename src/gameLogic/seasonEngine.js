@@ -81,24 +81,33 @@ function resolveSpring(state) {
   let planted = 0;
 
   const fallowPlots = plots.filter((p) => p.state === "fallow");
+  const restingPlots = fallowPlots.filter((p) => p.resting);
+  const activeFallowPlots = fallowPlots.filter((p) => !p.resting);
 
   if (planting === 0) {
     writer.add("Spring — No workers assigned to planting. Fields lie idle.");
-  } else if (fallowPlots.length === 0) {
+  } else if (activeFallowPlots.length === 0 && restingPlots.length > 0) {
+    writer.add(
+      `Spring — All available plots are set to rest. ${restingPlots.length} plot(s) recovering in fallow rotation.`
+    );
+  } else if (activeFallowPlots.length === 0) {
     writer.add("Spring — All plots already have standing crops.");
   } else {
-    // Each planting worker can cover one plot. Extra workers are wasted.
-    const plotsToPlant = Math.min(planting, fallowPlots.length);
+    // Each planting worker can cover one active fallow plot. Resting plots are skipped.
+    const plotsToPlant = Math.min(planting, activeFallowPlots.length);
     for (let i = 0; i < plotsToPlant; i++) {
-      fallowPlots[i].state = "planted";
+      activeFallowPlots[i].state = "planted";
+      activeFallowPlots[i].resting = false; // planted plots are no longer resting
       planted++;
     }
+    const restingNote = restingPlots.length > 0
+      ? ` ${restingPlots.length} plot(s) left to rest in fallow rotation.`
+      : "";
+    const unworkedNote = activeFallowPlots.length - plotsToPlant > 0
+      ? ` ${activeFallowPlots.length - plotsToPlant} active plot(s) unplanted (not enough workers).`
+      : "";
     writer.add(
-      `Spring — ${planted} plot(s) planted with tobacco. ${
-        fallowPlots.length - planted > 0
-          ? `${fallowPlots.length - planted} plot(s) left unplanted (not enough workers).`
-          : ""
-      }`.trim()
+      `Spring — ${planted} plot(s) planted with tobacco.${unworkedNote}${restingNote}`.trim()
     );
   }
 

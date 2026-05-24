@@ -56,11 +56,21 @@ export function useGameSession(saveKey) {
     setCurrentPrice(getSellPrice(fresh.year));
   }, []);
 
+  const handleTogglePlotRest = useCallback((plotId) => {
+    setState((prev) => ({
+      ...prev,
+      plots: prev.plots.map((p) =>
+        p.id === plotId ? { ...p, resting: !p.resting } : p
+      ),
+    }));
+  }, []);
+
   return {
     state,
     setState,
     currentPrice,
     setCurrentPrice,
     resetGame,
+    handleTogglePlotRest,
   };
 }

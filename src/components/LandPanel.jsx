@@ -1,5 +1,5 @@
 // LandPanel.jsx — Shows each plot's soil health as a colored bar.
-import { SOIL_THRESHOLDS } from "../gameLogic/constants.js";
+import { FALLOW_RECOVERY_CAP, FALLOW_RECOVERY_PER_SEASON, SOIL_THRESHOLDS } from "../gameLogic/constants.js";
 
 function soilColor(health) {
   if (health > SOIL_THRESHOLDS.GOOD) return "soil-good";
@@ -7,14 +7,13 @@ function soilColor(health) {
   return "soil-poor";
 }
 
-const STATE_LABELS = {
-  fallow:     "Fallow",
-  planted:    "Planted",
-  tended:     "Tended",
-  harvestable: "Ready",
-};
+function plotStateLabel(plot) {
+  if (plot.state === "fallow" && plot.resting) return "Resting";
+  const labels = { fallow: "Fallow", planted: "Planted", tended: "Tended", harvestable: "Ready" };
+  return labels[plot.state] ?? plot.state;
+}
 
-export default function LandPanel({ plots, maintenanceSoilGain = 0 }) {
+export default function LandPanel({ plots, maintenanceSoilGain = 0, onTogglePlotRest }) {
   return (
     <section className="panel land-panel">
       <h2>Land ({plots.length} plot{plots.length !== 1 ? "s" : ""})</h2>
@@ -22,11 +21,15 @@ export default function LandPanel({ plots, maintenanceSoilGain = 0 }) {
         const roundedSoil = Math.round(plot.soilHealth);
         const previewGain = Math.max(0, Math.min(maintenanceSoilGain, 100 - roundedSoil));
         const projectedSoil = Math.min(100, roundedSoil + previewGain);
+        const isFallow = plot.state === "fallow";
+        const canRecover = isFallow && roundedSoil < FALLOW_RECOVERY_CAP;
 
         return (
-          <div className="plot-row" key={plot.id}>
+          <div className={`plot-row${plot.resting ? " plot-resting" : ""}`} key={plot.id}>
             <span className="plot-name">{plot.name ?? `Plot ${plot.id}`}</span>
-            <span className="plot-state">{STATE_LABELS[plot.state] ?? plot.state}</span>
+            <span className={`plot-state${plot.resting ? " plot-state-resting" : ""}`}>
+              {plotStateLabel(plot)}
+            </span>
             <div className="soil-bar-track">
               <div
                 className={`soil-bar-fill ${soilColor(plot.soilHealth)}`}
@@ -37,8 +40,18 @@ export default function LandPanel({ plots, maintenanceSoilGain = 0 }) {
               )}
             </div>
             <span className="soil-pct">
-              {roundedSoil}%{previewGain > 0 ? ` -> ${projectedSoil}%` : ""}
+              {roundedSoil}%{previewGain > 0 ? ` → ${projectedSoil}%` : ""}
+              {canRecover && <span className="fallow-recovery-hint"> (+{FALLOW_RECOVERY_PER_SEASON}/season)</span>}
             </span>
+            {isFallow && onTogglePlotRest && (
+              <button
+                className={`btn-plot-rest ${plot.resting ? "btn-plot-rest--active" : ""}`}
+                onClick={() => onTogglePlotRest(plot.id)}
+                title={plot.resting ? "Return this plot to active rotation" : "Leave this plot fallow to recover soil"}
+              >
+                {plot.resting ? "Return to Rotation" : "Set to Rest"}
+              </button>
+            )}
           </div>
         );
       })}
