@@ -80,9 +80,25 @@ export function getTaskHint(task, count, plots, season) {
     return `${flavorHint} ${count} worker${count !== 1 ? "s" : ""} -> +${perPlot} soil per plot.`;
   }
 
-  const staticHints = {
-    [TASKS.PLANTING]: "1 worker plants 1 plot.",
-    [TASKS.HARVESTING]: "1 worker harvests 1 plot.",
-  };
-  return staticHints[task] ?? "";
+  if (task === TASKS.PLANTING) {
+    const fallowCount = plots.filter(p => p.state === "fallow").length;
+    if (fallowCount === 0) return "No fallow land to plant — all plots already carry crops.";
+    const willPlant = Math.min(count, fallowCount);
+    if (count === 0) return `${fallowCount} fallow plot${fallowCount !== 1 ? "s" : ""} available. Assign 1 worker per plot to plant.`;
+    const extra = count - willPlant;
+    const result = `${willPlant}/${fallowCount} fallow plots will be planted.`;
+    return extra > 0 ? `${result} ${extra} worker${extra !== 1 ? "s are" : " is"} surplus (more workers than fallow land).` : result;
+  }
+
+  if (task === TASKS.HARVESTING) {
+    const readyCount = plots.filter(p => p.state === "tended" || p.state === "planted").length;
+    if (readyCount === 0) return "No plots are ready to harvest yet.";
+    const willHarvest = Math.min(count, readyCount);
+    if (count === 0) return `${readyCount} plot${readyCount !== 1 ? "s are" : " is"} ready to harvest. Assign 1 worker per plot.`;
+    const missed = readyCount - willHarvest;
+    const result = `${willHarvest}/${readyCount} plots will be harvested.`;
+    return missed > 0 ? `${result} ${missed} plot${missed !== 1 ? "s will be" : " will be"} left unharvested — assign more workers.` : result;
+  }
+
+  return "";
 }

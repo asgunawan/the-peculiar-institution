@@ -1,9 +1,11 @@
 // App.jsx — Root coordinator for game panels and high-level flow.
 import { useEffect, useState } from "react";
 import {
+  BASE_YIELD_PER_PLOT,
   CURING_CAPACITY_PER_WORKER,
+  CURING_RATIO,
   SEASONS,
-  SEASONAL_WORKER_UPKEEP,
+  ENSLAVED_UPKEEP_PER_SEASON,
   SEASON_TASKS,
   SOIL_RESTORE_PER_WORKER,
 } from "./gameLogic/constants.js";
@@ -40,6 +42,8 @@ export default function App() {
     handleSellTen,
     handleSellAll,
     handleBuyWorker,
+    handleHireFreeWorker,
+    handleDismissFreeWorker,
     handleBuyPlot,
   } = useMarketActions({ state, setState, currentPrice, addToast });
 
@@ -58,13 +62,23 @@ export default function App() {
   // Only count tasks active in this season — other keys are stale from prior seasons.
   const activeTasks = SEASON_TASKS[season] ?? [];
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (state.assignments[t] || 0), 0);
-  const isOverAssigned = totalAssigned > state.workers;
-  const unassignedWorkers = Math.max(0, state.workers - totalAssigned);
+  const isOverAssigned = totalAssigned > state.workers.length;
+  const unassignedWorkers = Math.max(0, state.workers.length - totalAssigned);
   const nextStatePreview = resolveSeason(state);
   const nextSeasonName = SEASONS[nextStatePreview.seasonIndex];
 
   const projectedLeafAfterAdvance =
     nextStatePreview.resources.rawTobacco + nextStatePreview.resources.curedTobacco;
+
+  // Fixed Winter labor cost — only enslaved workers have ongoing upkeep; free workers are paid at hire.
+  const totalWinterLaborCost = state.workers.reduce(
+    (sum, w) => sum + (w.type === "enslaved" ? ENSLAVED_UPKEEP_PER_SEASON : 0),
+    0
+  );
+  // Liquid assets after the next advance (cash + sellable cured tobacco).
+  const projectedLiquidAssets =
+    nextStatePreview.money + (nextStatePreview.resources.curedTobacco * currentPrice / 100);
+
   let debtRisk = {
     level: "low",
     title: "Low",
@@ -89,11 +103,17 @@ export default function App() {
       title: "Elevated",
       detail: "Negative cash projected, but inventory remains to sell.",
     };
-  } else if (nextSeasonName === "Winter" && nextStatePreview.money < state.workers * SEASONAL_WORKER_UPKEEP) {
+  } else if (nextSeasonName === "Winter" && nextStatePreview.money < totalWinterLaborCost) {
     debtRisk = {
       level: "elevated",
       title: "Elevated",
-      detail: "Treasury is slim heading into Winter upkeep costs.",
+      detail: `Treasury is slim heading into Winter upkeep costs ($${totalWinterLaborCost.toFixed(2)}).`,
+    };
+  } else if (season !== "Winter" && projectedLiquidAssets < totalWinterLaborCost) {
+    debtRisk = {
+      level: "elevated",
+      title: "Elevated",
+      detail: `Winter upkeep will cost $${totalWinterLaborCost.toFixed(2)}. Projected liquid assets ($${projectedLiquidAssets.toFixed(2)}) look short — sell tobacco or reduce workers before Winter.`,
     };
   }
 
@@ -124,6 +144,34 @@ export default function App() {
         shortfall > 0
           ? `${shortfall.toLocaleString()} lbs are projected to rot if you advance with current plan.`
           : "Projected Winter curing plan can process all expected raw leaf.",
+    };
+  }
+
+  // Fall harvest projection — visible during Spring (planting plan) and Summer (tending outcomes).
+  let harvestOutlook = null;
+  if (season === "Spring") {
+    const plantedAfter = nextStatePreview.plots.filter(p => p.state === "planted").length;
+    const totalPlots = state.plots.length;
+    const fallowNow = state.plots.filter(p => p.state === "fallow").length;
+    if (fallowNow > 0) {
+      harvestOutlook = {
+        label: "Planting Projection",
+        value: `${plantedAfter} of ${totalPlots} plots planted`,
+        detail: plantedAfter < fallowNow
+          ? `${fallowNow - plantedAfter} fallow plot(s) left unplanted — assign more workers.`
+          : "All fallow plots will be planted this Spring.",
+      };
+    }
+  } else if (season === "Summer") {
+    const tendedPlots = nextStatePreview.plots.filter(p => p.state === "tended");
+    const projectedRaw = tendedPlots.reduce((sum, p) => {
+      return sum + Math.floor(BASE_YIELD_PER_PLOT * (p.soilHealth / 100) * (p.yieldModifier ?? 1.0));
+    }, 0);
+    const projectedCured = Math.floor(projectedRaw / CURING_RATIO);
+    harvestOutlook = {
+      label: "Fall Harvest Projection",
+      value: `~${projectedRaw.toLocaleString()} lbs raw leaf`,
+      detail: `${tendedPlots.length} plot(s) tended \u2192 ~${projectedCured.toLocaleString()} lbs cured if fully processed in Winter.`,
     };
   }
 
@@ -172,7 +220,9 @@ export default function App() {
         <main className="game-grid">
           <div className="col-left">
             <WorkforcePanel
-              workers={state.workers}
+              workers={state.workers.length}
+              enslavedCount={state.workers.filter(w => w.type === "enslaved").length}
+              freeCount={state.workers.filter(w => w.type === "free").length}
               season={season}
               assignments={state.assignments}
               plots={state.plots}
@@ -187,6 +237,7 @@ export default function App() {
               nextYear={nextStatePreview.year}
               debtRisk={debtRisk}
               curingOutlook={curingOutlook}
+              harvestOutlook={harvestOutlook}
             />
             <MarketPanel
               money={state.money}
@@ -196,6 +247,9 @@ export default function App() {
               onSellTen={handleSellTen}
               onSellAll={handleSellAll}
               onBuyWorker={handleBuyWorker}
+              onHireFreeWorker={handleHireFreeWorker}
+              onDismissFreeWorker={handleDismissFreeWorker}
+              freeCount={state.workers.filter(w => w.type === "free").length}
               onBuyPlot={handleBuyPlot}
             />
             <EventLog log={state.log} />

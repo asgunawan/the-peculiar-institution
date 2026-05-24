@@ -3,6 +3,7 @@ export default function SeasonOutlookPanel({
   nextYear,
   debtRisk,
   curingOutlook,
+  harvestOutlook,
 }) {
   const curingRiskClass =
     curingOutlook.shortfall === null
@@ -34,6 +35,14 @@ export default function SeasonOutlookPanel({
         <p className={`outlook-value ${curingRiskClass}`}>{curingSummary}</p>
         <p className="outlook-hint">{curingOutlook.detail}</p>
       </div>
+
+      {harvestOutlook && (
+        <div className="outlook-block">
+          <p className="outlook-label">{harvestOutlook.label}</p>
+          <p className="outlook-value risk-low">{harvestOutlook.value}</p>
+          <p className="outlook-hint">{harvestOutlook.detail}</p>
+        </div>
+      )}
     </section>
   );
 }
