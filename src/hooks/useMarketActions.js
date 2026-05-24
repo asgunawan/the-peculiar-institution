@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { FIELD_NAMES, PLOT_COST, WORKER_COST } from "../gameLogic/constants.js";
+import { FIELD_NAMES, PLOT_COST, ENSLAVED_PURCHASE_COST, FREE_WORKER_WAGE_PER_SEASON } from "../gameLogic/constants.js";
 import { pushLog } from "../gameLogic/logUtils.js";
 
 /**
@@ -59,22 +59,74 @@ export function useMarketActions({ state, setState, currentPrice, addToast }) {
    * Buys one additional worker if treasury can afford it.
    */
   const handleBuyWorker = useCallback(() => {
-    if (state.money < WORKER_COST) return;
+    if (state.money < ENSLAVED_PURCHASE_COST) return;
 
+    const newId = state.workers.length + 1;
     const { log, logCounter } = pushLog(
       state.log,
       state.logCounter,
-      `Purchased one additional worker for $${WORKER_COST}.`
+      `Purchased an enslaved worker at auction for $${ENSLAVED_PURCHASE_COST}.`
     );
 
     setState({
       ...state,
-      money: parseFloat((state.money - WORKER_COST).toFixed(2)),
-      workers: state.workers + 1,
+      money: parseFloat((state.money - ENSLAVED_PURCHASE_COST).toFixed(2)),
+      workers: [...state.workers, { id: newId, type: "enslaved" }],
       log,
       logCounter,
     });
-    addToast("+1 worker hired", "accent");
+    addToast("+1 enslaved worker purchased", "accent");
+  }, [state, setState, addToast]);
+
+  /**
+   * Hires one free worker for this season only.
+   * Wage is paid immediately at hire — free workers leave after the season resolves.
+   */
+  const handleHireFreeWorker = useCallback(() => {
+    if (state.money < FREE_WORKER_WAGE_PER_SEASON) {
+      addToast("Not enough cash to hire", "red");
+      return;
+    }
+    const newId = state.workers.length + 1;
+    const { log, logCounter } = pushLog(
+      state.log,
+      state.logCounter,
+      `Hired a seasonal free worker for $${FREE_WORKER_WAGE_PER_SEASON} (paid now). They will return home after this season.`
+    );
+
+    setState({
+      ...state,
+      money: parseFloat((state.money - FREE_WORKER_WAGE_PER_SEASON).toFixed(2)),
+      workers: [...state.workers, { id: newId, type: "free" }],
+      log,
+      logCounter,
+    });
+    addToast(`+1 seasonal worker (−$${FREE_WORKER_WAGE_PER_SEASON})`, "accent");
+  }, [state, setState, addToast]);
+
+  /**
+   * Dismisses the most recently hired free worker.
+   * Permanent (enslaved) workers cannot be dismissed.
+   */
+  const handleDismissFreeWorker = useCallback(() => {
+    let lastFreeIdx = -1;
+    for (let i = state.workers.length - 1; i >= 0; i--) {
+      if (state.workers[i].type === "free") { lastFreeIdx = i; break; }
+    }
+    if (lastFreeIdx === -1) return;
+
+    const newWorkers = [
+      ...state.workers.slice(0, lastFreeIdx),
+      ...state.workers.slice(lastFreeIdx + 1),
+    ];
+    const { log, logCounter } = pushLog(
+      state.log,
+      state.logCounter,
+      "Sent a seasonal free worker home early."
+    );
+
+    setState({ ...state, workers: newWorkers, log, logCounter });
+    addToast("−1 free worker released", "red");
   }, [state, setState, addToast]);
 
   /**
@@ -116,6 +168,8 @@ export function useMarketActions({ state, setState, currentPrice, addToast }) {
     handleSellTen,
     handleSellAll,
     handleBuyWorker,
+    handleHireFreeWorker,
+    handleDismissFreeWorker,
     handleBuyPlot,
   };
 }

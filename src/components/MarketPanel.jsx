@@ -1,5 +1,5 @@
 // MarketPanel.jsx — Buy/sell interface: sell cured tobacco, buy workers, buy land.
-import { WORKER_COST, PLOT_COST } from "../gameLogic/constants.js";
+import { ENSLAVED_PURCHASE_COST, FREE_WORKER_WAGE_PER_SEASON, PLOT_COST } from "../gameLogic/constants.js";
 
 const PLOT_TIMING_HINT = {
   Spring: "Buy before advancing to plant it this season.",
@@ -16,6 +16,9 @@ export default function MarketPanel({
   onSellTen,
   onSellAll,
   onBuyWorker,
+  onHireFreeWorker,
+  onDismissFreeWorker,
+  freeCount,
   onBuyPlot,
 }) {
   const saleValue = ((curedTobacco * currentPrice) / 100).toFixed(2);
@@ -56,16 +59,39 @@ export default function MarketPanel({
 
       <div className="market-row">
         <div className="market-copy">
-          <p className="market-item">Buy a Worker</p>
-          <p className="market-sub">${WORKER_COST} each &mdash; keeps fields planted, tended, and harvested on time.</p>
+          <p className="market-item">Purchase Enslaved Worker</p>
+          <p className="market-sub">${ENSLAVED_PURCHASE_COST} upfront — $7/season upkeep, permanent labor.</p>
         </div>
         <button
           className="btn btn-buy"
           onClick={onBuyWorker}
-          disabled={money < WORKER_COST}
+          disabled={money < ENSLAVED_PURCHASE_COST}
         >
-          Buy (${WORKER_COST})
+          Buy (${ENSLAVED_PURCHASE_COST})
         </button>
+      </div>
+
+      <div className="market-row">
+        <div className="market-copy">
+          <p className="market-item">Hire Free Worker</p>
+          <p className="market-sub">${FREE_WORKER_WAGE_PER_SEASON} paid now — works this season only, then returns home.</p>
+        </div>
+        <div className="market-actions">
+          <button
+            className="btn btn-buy"
+            onClick={onHireFreeWorker}
+          >
+            Hire (Free)
+          </button>
+          <button
+            className="btn btn-sell"
+            onClick={onDismissFreeWorker}
+            disabled={freeCount === 0}
+            title={freeCount === 0 ? "No free workers to release" : "Release one free worker"}
+          >
+            Release
+          </button>
+        </div>
       </div>
 
       <div className="market-row">

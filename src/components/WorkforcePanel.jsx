@@ -15,7 +15,7 @@ import {
   getYieldClass,
 } from "../gameLogic/taskHints.js";
 
-export default function WorkforcePanel({ workers, season, assignments, plots, onChange }) {
+export default function WorkforcePanel({ workers, enslavedCount, freeCount, season, assignments, plots, onChange }) {
   const activeTasks = SEASON_TASKS[season] ?? [];
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (assignments[t] || 0), 0);
   const remaining = workers - totalAssigned;
@@ -36,7 +36,10 @@ export default function WorkforcePanel({ workers, season, assignments, plots, on
     <section className="panel workforce-panel">
       <h2>Workforce</h2>
       <p className="panel-meta">
-        {workers} workers total &mdash;{" "}
+        {enslavedCount > 0 && <span>{enslavedCount} enslaved</span>}
+        {enslavedCount > 0 && freeCount > 0 && <span className="meta-sep"> / </span>}
+        {freeCount > 0 && <span>{freeCount} hired</span>}
+        {" "}&mdash;{" "}
         <span className={remaining < 0 ? "over-assigned" : "workers-remaining"}>
           {remaining >= 0 ? `${remaining} unassigned` : `${Math.abs(remaining)} over limit`}
         </span>
