@@ -24,6 +24,7 @@ import {
   TOBACCO_PRICE_CURVE,
   PRICE_VARIANCE_CENTS,
   ENSLAVED_UPKEEP_PER_SEASON,
+  HIREOUT_INCOME_PER_WORKER,
   DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
 } from "./constants.js";
@@ -329,19 +330,21 @@ export function resolveSeason(state) {
     default:        nextState = { ...state };
   }
 
-  // Growing-season maintenance: workers tend fences, clear brush, dig drainage.
-  // No direct soil restoration in Spring/Summer/Fall — tobacco-exhausted Chesapeake
-  // soil did not recover from growing-season labor. Winter fieldwork (handled inside
-  // resolveWinter) and fallow rotation are the only two paths to recovery in 1780.
+  // Growing-season maintenance: workers tend fences, clear brush, and are hired
+  // out to neighboring planters for wages. Hire-out was standard Chesapeake
+  // practice for surplus enslaved labor; the planter received the wages.
+  // No soil restoration occurs until Winter.
   const maintenanceWorkers = state.assignments.maintenance || 0;
   if (season !== "Winter" && maintenanceWorkers > 0) {
+    const hireOutIncome = parseFloat((maintenanceWorkers * HIREOUT_INCOME_PER_WORKER).toFixed(2));
     const maintLog = pushStructuredLog(
       nextState.log,
       nextState.logCounter,
-      `${season} — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} tended fences and cleared brush. Soil restoration is off-season work.`
+      `${season} \u2014 ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} hired out to neighboring farms and performed general plantation work. $${hireOutIncome.toFixed(2)} received.`
     );
     nextState = {
       ...nextState,
+      money: parseFloat((nextState.money + hireOutIncome).toFixed(2)),
       log: maintLog.log,
       logCounter: maintLog.logCounter,
     };

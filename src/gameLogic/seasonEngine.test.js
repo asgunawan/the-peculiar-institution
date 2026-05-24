@@ -4,6 +4,7 @@ import {
   ENSLAVED_UPKEEP_PER_SEASON,
   FALLOW_RECOVERY_CAP,
   FALLOW_RECOVERY_PER_SEASON,
+  HIREOUT_INCOME_PER_WORKER,
   SOIL_RESTORE_PER_WORKER,
 } from "./constants.js";
 import { createInitialState } from "./initialState.js";
@@ -234,5 +235,37 @@ describe("resolveSeason", () => {
 
     // Soil at 100 (above cap=75) should not change from fallow recovery
     expect(next.plots[0].soilHealth).toBe(100);
+  });
+
+  it("maintenance workers generate hire-out income in growing seasons", () => {
+    const startMoney = 200;
+    const maintenanceCount = 3;
+    const state = createState({
+      seasonIndex: 0, // Spring
+      money: startMoney,
+      assignments: { planting: 0, maintenance: maintenanceCount },
+    });
+
+    const next = resolveSeason(state);
+    const expectedIncome = maintenanceCount * HIREOUT_INCOME_PER_WORKER;
+
+    expect(parseFloat((next.money - startMoney).toFixed(2))).toBe(expectedIncome);
+  });
+
+  it("maintenance workers do not generate hire-out income in Winter", () => {
+    const startMoney = 200;
+    const state = createState({
+      seasonIndex: 3, // Winter
+      money: startMoney,
+      assignments: { curing: 0, maintenance: 3 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const next = resolveSeason(state);
+    // Winter: upkeep is deducted, no hire-out income
+    const expectedMoney = parseFloat(
+      (startMoney - state.workers.filter(w => w.type === "enslaved").length * ENSLAVED_UPKEEP_PER_SEASON).toFixed(2)
+    );
+    expect(next.money).toBe(expectedMoney);
   });
 });

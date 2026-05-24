@@ -12,6 +12,7 @@ Scope: tobacco phase only; use this before changing any constants in src/gameLog
 - Soil restoration options in 1780 Virginia: almost none effective at scale. Fallow rotation (leaving fields idle 3–7 years) was the primary remedy. Manure and wood-ash applications provided marginal benefit on seedbeds. Marl (calcium carbonate) was known but expensive and uncommon before the 1800s. No nitrogen-fixing crop rotation was standard practice yet. The dominant planter response to exhausted soil was westward expansion to fresh land, not restoration.
 - Planter finance reality: chronic debt pressure was common (not instant collapse at $0 cash).
 - Annual provisioning burden: rough historical order of magnitude for support costs is about $20-$50 per worker per year (food, clothing, basic care; varies by place/time).
+- Hire-out economy: Chesapeake planters routinely hired out surplus enslaved workers to neighboring planters, merchants, and tradespeople. The planter received the wages; the worker received nothing. Unskilled hire-out rates in 1780s Virginia were roughly $30-50/year per worker. This was not a fringe practice — Jefferson, Washington, Fitzhugh, and most Virginia planters used it to generate cash during slack seasons and when labor exceeded their own land needs.
 
 ## Design implications for this project
 

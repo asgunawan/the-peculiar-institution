@@ -116,6 +116,14 @@ export const FREE_WORKER_WAGE_PER_SEASON = 15;
 // inventory is exhausted, so debt pressure is sustained but less abrupt.
 export const DEBT_FORECLOSURE_SEASONS = 3;
 
+// Growing-season income per maintenance worker per season (Spring/Summer/Fall).
+// Represents the standard Chesapeake practice of hiring out surplus enslaved
+// workers to neighboring planters and tradespeople during slack periods.
+// The planter received the wages; the worker received nothing.
+// Historical note: unskilled hire-out in 1780s Virginia ~$30–50/yr
+// (~$7.50–12.50/quarter). $3/season is conservative for gameplay balance.
+export const HIREOUT_INCOME_PER_WORKER = 3;
+
 // ── Starting conditions ─────────────────────────────────────────────────────
 export const STARTING_MONEY = 500;
 export const STARTING_WORKERS = 4;

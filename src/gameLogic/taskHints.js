@@ -2,6 +2,7 @@ import {
   TASKS,
   CURING_CAPACITY_PER_WORKER,
   CURING_RATIO,
+  HIREOUT_INCOME_PER_WORKER,
   SOIL_RESTORE_PER_WORKER,
   WORKERS_PER_PLOT_FULL_TEND,
 } from "./constants.js";
@@ -14,18 +15,17 @@ const TASK_LABELS = {
 };
 
 const SEASONAL_MAINTENANCE_LABELS = {
-  Spring: "Field Prep (hilling & harrowing)",
-  Summer: "Worming & Topping",
-  Fall: "Stalk Clearing & Soil Break",
-  Winter: "Plant Bed Burning",
+  Spring: "Hire Out / Field Prep",
+  Summer: "Hire Out / Worming & Topping",
+  Fall:   "Hire Out / Stalk Clearing",
+  Winter: "Off-Season Fieldwork (soil)",
 };
 
 const SEASONAL_MAINTENANCE_HINTS = {
-  Spring: "Workers hill rows and hoe weeds around new transplants.",
-  Summer:
-    "Workers patrol every plant for hornworms; pinch off flower heads (topping) to improve leaf quality.",
-  Fall: "Workers clear cut stalks and break soil to reduce next season's pest load.",
-  Winter: "Workers burn cleared woodland to sterilize seedbeds and repair fences for spring.",
+  Spring: "Workers hill rows and hoe weeds. Surplus workers are hired out to neighboring farms.",
+  Summer: "Workers patrol for hornworms and top flower heads. Surplus workers are hired out to neighboring farms.",
+  Fall:   "Workers clear stalks and break soil. Surplus workers are hired out to neighboring farms.",
+  Winter: "Workers burn seedbeds and repair fences. Off-season field work partially restores soil health.",
 };
 
 export function getTaskLabel(task, season) {
@@ -71,13 +71,22 @@ export function getTaskHint(task, count, plots, season) {
   }
 
   if (task === TASKS.MAINTENANCE) {
-    const flavorHint = SEASONAL_MAINTENANCE_HINTS[season] ?? "Soil restoration work.";
-    const total = count * SOIL_RESTORE_PER_WORKER;
-    if (count === 0) {
-      return `${flavorHint} Each worker restores ${SOIL_RESTORE_PER_WORKER} soil health.`;
+    const flavorHint = SEASONAL_MAINTENANCE_HINTS[season] ?? "General plantation work.";
+    if (season === "Winter") {
+      // Winter: soil restoration
+      const total = count * SOIL_RESTORE_PER_WORKER;
+      if (count === 0) {
+        return `${flavorHint} Each worker restores ${SOIL_RESTORE_PER_WORKER} soil health (spread across all plots).`;
+      }
+      const perPlot = numPlots > 0 ? Math.round(total / numPlots) : total;
+      return `${flavorHint} ${count} worker${count !== 1 ? "s" : ""} -> +${perPlot} soil per plot.`;
     }
-    const perPlot = numPlots > 0 ? Math.round(total / numPlots) : total;
-    return `${flavorHint} ${count} worker${count !== 1 ? "s" : ""} -> +${perPlot} soil per plot.`;
+    // Growing seasons: hire-out income
+    if (count === 0) {
+      return `${flavorHint} Surplus workers can be hired out to neighboring farms at $${HIREOUT_INCOME_PER_WORKER}/worker/season.`;
+    }
+    const totalIncome = count * HIREOUT_INCOME_PER_WORKER;
+    return `${flavorHint} ${count} worker${count !== 1 ? "s" : ""} hired out — $${totalIncome} earned this season.`;
   }
 
   if (task === TASKS.PLANTING) {
