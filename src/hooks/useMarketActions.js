@@ -6,6 +6,10 @@ import { pushLog } from "../gameLogic/logUtils.js";
  * Market and assignment related callbacks.
  */
 export function useMarketActions({ state, setState, currentPrice, addToast }) {
+  const getNextWorkerId = useCallback(() => {
+    return state.workers.reduce((maxId, worker) => Math.max(maxId, worker.id || 0), 0) + 1;
+  }, [state.workers]);
+
   /**
    * Persists player task allocation and maintenance memory.
    */
@@ -61,7 +65,7 @@ export function useMarketActions({ state, setState, currentPrice, addToast }) {
   const handleBuyWorker = useCallback(() => {
     if (state.money < ENSLAVED_PURCHASE_COST) return;
 
-    const newId = state.workers.length + 1;
+    const newId = getNextWorkerId();
     const { log, logCounter } = pushLog(
       state.log,
       state.logCounter,
@@ -76,7 +80,7 @@ export function useMarketActions({ state, setState, currentPrice, addToast }) {
       logCounter,
     });
     addToast("+1 enslaved worker purchased", "accent");
-  }, [state, setState, addToast]);
+  }, [state, setState, addToast, getNextWorkerId]);
 
   /**
    * Hires one free worker for this season only.
@@ -87,7 +91,7 @@ export function useMarketActions({ state, setState, currentPrice, addToast }) {
       addToast("Not enough cash to hire", "red");
       return;
     }
-    const newId = state.workers.length + 1;
+    const newId = getNextWorkerId();
     const { log, logCounter } = pushLog(
       state.log,
       state.logCounter,
@@ -102,7 +106,7 @@ export function useMarketActions({ state, setState, currentPrice, addToast }) {
       logCounter,
     });
     addToast(`+1 seasonal worker (−$${FREE_WORKER_WAGE_PER_SEASON})`, "accent");
-  }, [state, setState, addToast]);
+  }, [state, setState, addToast, getNextWorkerId]);
 
   /**
    * Dismisses the most recently hired free worker.

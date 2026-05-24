@@ -48,6 +48,9 @@ export default function App() {
   } = useMarketActions({ state, setState, currentPrice, addToast });
 
   const season = SEASONS[state.seasonIndex];
+  const totalWorkers = state.workers.length;
+  const enslavedCount = state.workers.filter((w) => w.type === "enslaved").length;
+  const freeCount = totalWorkers - enslavedCount;
 
   // Expose run-log helpers on window for console access during playtesting.
   // Call window.downloadRunLog() in the browser console to save a JSON file.
@@ -62,8 +65,8 @@ export default function App() {
   // Only count tasks active in this season — other keys are stale from prior seasons.
   const activeTasks = SEASON_TASKS[season] ?? [];
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (state.assignments[t] || 0), 0);
-  const isOverAssigned = totalAssigned > state.workers.length;
-  const unassignedWorkers = Math.max(0, state.workers.length - totalAssigned);
+  const isOverAssigned = totalAssigned > totalWorkers;
+  const unassignedWorkers = Math.max(0, totalWorkers - totalAssigned);
   const nextStatePreview = resolveSeason(state);
   const nextSeasonName = SEASONS[nextStatePreview.seasonIndex];
 
@@ -220,9 +223,9 @@ export default function App() {
         <main className="game-grid">
           <div className="col-left">
             <WorkforcePanel
-              workers={state.workers.length}
-              enslavedCount={state.workers.filter(w => w.type === "enslaved").length}
-              freeCount={state.workers.filter(w => w.type === "free").length}
+              workers={totalWorkers}
+              enslavedCount={enslavedCount}
+              freeCount={freeCount}
               season={season}
               assignments={state.assignments}
               plots={state.plots}
@@ -249,7 +252,7 @@ export default function App() {
               onBuyWorker={handleBuyWorker}
               onHireFreeWorker={handleHireFreeWorker}
               onDismissFreeWorker={handleDismissFreeWorker}
-              freeCount={state.workers.filter(w => w.type === "free").length}
+              freeCount={freeCount}
               onBuyPlot={handleBuyPlot}
             />
             <EventLog log={state.log} />

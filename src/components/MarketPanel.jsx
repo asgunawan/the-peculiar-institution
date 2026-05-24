@@ -80,6 +80,12 @@ export default function MarketPanel({
           <button
             className="btn btn-buy"
             onClick={onHireFreeWorker}
+            disabled={money < FREE_WORKER_WAGE_PER_SEASON}
+            title={
+              money < FREE_WORKER_WAGE_PER_SEASON
+                ? `Need $${FREE_WORKER_WAGE_PER_SEASON} to hire a free worker`
+                : "Hire one free seasonal worker"
+            }
           >
             Hire (Free)
           </button>
