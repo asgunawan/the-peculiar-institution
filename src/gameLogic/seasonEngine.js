@@ -16,6 +16,8 @@ import {
   BASE_YIELD_PER_PLOT,
   SOIL_DEGRADE_PER_HARVEST,
   SOIL_RESTORE_PER_WORKER,
+  FALLOW_RECOVERY_PER_SEASON,
+  FALLOW_RECOVERY_CAP,
   CURING_RATIO,
   CURING_CAPACITY_PER_WORKER,
   WORKERS_PER_PLOT_FULL_TEND,
@@ -260,8 +262,23 @@ function resolveWinter(state) {
     writer.add("Winter — No raw leaf to cure.");
   }
 
-
   const resources = { rawTobacco: 0, curedTobacco };
+
+  // ── Maintenance (Winter only: off-season soil restoration) ──────────────────
+  // Tobacco-exhausted soil does not recover from labor alone. Winter fieldwork
+  // (drainage, turning, wood ash) provides modest improvement but cannot overcome
+  // the structural depletion from monoculture. The real answer is fallow rotation.
+  const maintenanceWorkers = state.assignments.maintenance || 0;
+  if (maintenanceWorkers > 0 && plots.length > 0) {
+    const totalRestore = maintenanceWorkers * SOIL_RESTORE_PER_WORKER;
+    const restorePerPlot = totalRestore / plots.length;
+    plots.forEach((p) => {
+      p.soilHealth = clamp(p.soilHealth + restorePerPlot, 0, 100);
+    });
+    writer.add(
+      `Winter — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} worked the dormant fields, restoring ~${Math.round(restorePerPlot)} soil health per plot.`
+    );
+  }
 
   // ── Check for victory (cotton gin) ──────────────────────────────────────
   if (state.year === COTTON_GIN_YEAR - 1) {
@@ -303,26 +320,41 @@ export function resolveSeason(state) {
     default:        nextState = { ...state };
   }
 
-  // Apply maintenance workers (available every season — any unneeded workers can tend soil).
+  // Growing-season maintenance: workers tend fences, clear brush, dig drainage.
+  // No direct soil restoration in Spring/Summer/Fall — tobacco-exhausted Chesapeake
+  // soil did not recover from growing-season labor. Winter fieldwork (handled inside
+  // resolveWinter) and fallow rotation are the only two paths to recovery in 1780.
   const maintenanceWorkers = state.assignments.maintenance || 0;
-  if (maintenanceWorkers > 0 && nextState.plots.length > 0) {
-    const maintPlots = clonePlots(nextState.plots);
-    const totalRestore = maintenanceWorkers * SOIL_RESTORE_PER_WORKER;
-    const restorePerPlot = totalRestore / maintPlots.length;
-    maintPlots.forEach((p) => {
-      p.soilHealth = clamp(p.soilHealth + restorePerPlot, 0, 100);
-    });
-    const maintenanceLog = pushStructuredLog(
+  if (season !== "Winter" && maintenanceWorkers > 0) {
+    const maintLog = pushStructuredLog(
       nextState.log,
       nextState.logCounter,
-      `${season} — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} maintained the fields, restoring ~${Math.round(restorePerPlot)} soil health per plot.`
+      `${season} — ${maintenanceWorkers} worker${maintenanceWorkers !== 1 ? "s" : ""} tended fences and cleared brush. Soil restoration is off-season work.`
     );
     nextState = {
       ...nextState,
-      plots: maintPlots,
-      log: maintenanceLog.log,
-      logCounter: maintenanceLog.logCounter,
+      log: maintLog.log,
+      logCounter: maintLog.logCounter,
     };
+  }
+
+  // ── Passive fallow recovery (every season) ────────────────────────────────
+  // Plots left unplanted slowly recover soil health through natural rest.
+  // This is the primary soil-restoration mechanic available to a 1780 Virginia
+  // planter: leave exhausted land fallow for several seasons and let it recover.
+  // Recovery is capped at FALLOW_RECOVERY_CAP — tobacco-exhausted ground rarely
+  // returns to virgin productivity without moving to genuinely fresh land.
+  const recoverableFallowPlots = nextState.plots.filter(
+    (p) => p.state === "fallow" && p.soilHealth < FALLOW_RECOVERY_CAP
+  );
+  if (recoverableFallowPlots.length > 0) {
+    const recoveredPlots = clonePlots(nextState.plots);
+    recoveredPlots.forEach((p) => {
+      if (p.state === "fallow") {
+        p.soilHealth = clamp(p.soilHealth + FALLOW_RECOVERY_PER_SEASON, 0, FALLOW_RECOVERY_CAP);
+      }
+    });
+    nextState = { ...nextState, plots: recoveredPlots };
   }
 
   // Advance calendar

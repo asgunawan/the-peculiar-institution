@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DEBT_FORECLOSURE_SEASONS, ENSLAVED_UPKEEP_PER_SEASON } from "./constants.js";
+import {
+  DEBT_FORECLOSURE_SEASONS,
+  ENSLAVED_UPKEEP_PER_SEASON,
+  FALLOW_RECOVERY_CAP,
+  FALLOW_RECOVERY_PER_SEASON,
+  SOIL_RESTORE_PER_WORKER,
+} from "./constants.js";
 import { createInitialState } from "./initialState.js";
 import { resolveSeason } from "./seasonEngine.js";
 
@@ -152,5 +158,81 @@ describe("resolveSeason", () => {
     const expectedCost = 2 * ENSLAVED_UPKEEP_PER_SEASON;
 
     expect(parseFloat((startMoney - next.money).toFixed(2))).toBe(expectedCost);
+  });
+
+  it("maintenance workers restore soil in Winter", () => {
+    const base = createInitialState();
+    const startSoil = 60;
+    const state = createState({
+      seasonIndex: 3, // Winter
+      plots: [{ ...base.plots[0], soilHealth: startSoil, state: "fallow" }],
+      assignments: { curing: 0, maintenance: 2 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const next = resolveSeason(state);
+    // Winter applies maintenance restoration AND fallow passive recovery.
+    const expectedRestore = 2 * SOIL_RESTORE_PER_WORKER + FALLOW_RECOVERY_PER_SEASON;
+
+    expect(next.plots[0].soilHealth).toBe(startSoil + expectedRestore);
+  });
+
+  it("maintenance workers do not restore soil in growing seasons", () => {
+    const base = createInitialState();
+    const startSoil = 60;
+    const state = createState({
+      seasonIndex: 0, // Spring
+      plots: [{ ...base.plots[0], soilHealth: startSoil, state: "fallow" }],
+      assignments: { planting: 0, maintenance: 4 },
+    });
+
+    const next = resolveSeason(state);
+
+    // Fallow passive recovery applies (+FALLOW_RECOVERY_PER_SEASON) but maintenance
+    // should NOT restore soil in Spring — only the passive fallow recovery shows.
+    expect(next.plots[0].soilHealth).toBe(
+      Math.min(startSoil + FALLOW_RECOVERY_PER_SEASON, FALLOW_RECOVERY_CAP)
+    );
+  });
+
+  it("fallow plots passively recover soil each season up to the cap", () => {
+    const base = createInitialState();
+    const state = createState({
+      seasonIndex: 0, // Spring
+      plots: [{ ...base.plots[0], soilHealth: 50, state: "fallow" }],
+      assignments: { planting: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+
+    expect(next.plots[0].soilHealth).toBe(50 + FALLOW_RECOVERY_PER_SEASON);
+  });
+
+  it("fallow recovery does not exceed FALLOW_RECOVERY_CAP", () => {
+    const base = createInitialState();
+    const nearCap = FALLOW_RECOVERY_CAP - 1;
+    const state = createState({
+      seasonIndex: 0, // Spring
+      plots: [{ ...base.plots[0], soilHealth: nearCap, state: "fallow" }],
+      assignments: { planting: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+
+    expect(next.plots[0].soilHealth).toBe(FALLOW_RECOVERY_CAP);
+  });
+
+  it("fallow recovery does not apply to plots above the cap", () => {
+    const base = createInitialState();
+    const state = createState({
+      seasonIndex: 0, // Spring — new plots start at 100, above FALLOW_RECOVERY_CAP
+      plots: [{ ...base.plots[0], soilHealth: 100, state: "fallow" }],
+      assignments: { planting: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+
+    // Soil at 100 (above cap=75) should not change from fallow recovery
+    expect(next.plots[0].soilHealth).toBe(100);
   });
 });

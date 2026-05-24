@@ -9,6 +9,7 @@ Scope: tobacco phase only; use this before changing any constants in src/gameLog
 - Worker output benchmark: about 1,710 lbs tobacco per worker per year (late 1600s Chesapeake benchmark from Menard data cited by Wikipedia).
 - Labor organization: gang system was common for tobacco, often teams of about 8-12 workers under supervision.
 - Soil effect: tobacco monoculture caused severe depletion; yield dropped quickly without rotation/fallow/restoration.
+- Soil restoration options in 1780 Virginia: almost none effective at scale. Fallow rotation (leaving fields idle 3–7 years) was the primary remedy. Manure and wood-ash applications provided marginal benefit on seedbeds. Marl (calcium carbonate) was known but expensive and uncommon before the 1800s. No nitrogen-fixing crop rotation was standard practice yet. The dominant planter response to exhausted soil was westward expansion to fresh land, not restoration.
 - Planter finance reality: chronic debt pressure was common (not instant collapse at $0 cash).
 - Annual provisioning burden: rough historical order of magnitude for support costs is about $20-$50 per worker per year (food, clothing, basic care; varies by place/time).
 

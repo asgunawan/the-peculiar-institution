@@ -38,8 +38,22 @@ export const BASE_YIELD_PER_PLOT = 2000; // lbs raw tobacco
 // Soil health lost per plot each harvest. Monoculture tobacco is brutal on soil.
 export const SOIL_DEGRADE_PER_HARVEST = 15;
 
-// Soil health restored per maintenance worker each Winter.
-export const SOIL_RESTORE_PER_WORKER = 5;
+// Soil health restored per maintenance worker during Winter (off-season fieldwork only).
+// Growing-season maintenance has no soil effect — exhausted tobacco land does not recover
+// from labor alone. Historical note: Virginia planters had almost no effective soil
+// restoration tools in 1780; fallow rotation was the primary (and slow) remedy.
+export const SOIL_RESTORE_PER_WORKER = 4;
+
+// Passive soil recovery per season for plots left fallow (not planted).
+// Represents the slow natural recovery of rested land.
+export const FALLOW_RECOVERY_PER_SEASON = 3;
+
+// Fallow rotation cannot fully restore tobacco-exhausted land. A plot left fallow
+// recovers to this ceiling at most. Fresh (purchased) plots start at 100 and can
+// be maintained above this cap through active Winter labor.
+// Historical note: Chesapeake planters found exhausted soil rarely returned to
+// virgin productivity — the answer was to move west to fresh land.
+export const FALLOW_RECOVERY_CAP = 75;
 
 // Raw-to-cured conversion: 2 lbs raw → 1 lb cured.
 // Historical: tobacco curing (air-cure/flue-cure) loses ~half the weight.
