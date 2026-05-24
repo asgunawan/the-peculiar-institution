@@ -239,7 +239,6 @@ function resolveWinter(state) {
   const rawRotted = rawTobacco - rawUsed;
 
   curedTobacco += newCured;
-  rawTobacco = 0; // All remaining raw rots at end of winter.
 
   if (rawUsed > 0) {
     writer.add(
@@ -251,7 +250,7 @@ function resolveWinter(state) {
       `Winter — ${rawRotted} lbs of uncured raw leaf rotted. Assign more workers to curing next year.`
     );
   }
-  if (rawUsed === 0 && rawTobacco === 0) {
+  if (rawUsed === 0 && rawRotted === 0) {
     writer.add("Winter — No raw leaf to cure.");
   }
 
@@ -274,7 +273,6 @@ function resolveWinter(state) {
     resources,
     log,
     logCounter,
-    victory: state.year >= COTTON_GIN_YEAR,
   };
 }
 
@@ -383,6 +381,7 @@ export function resolveSeason(state) {
     assignments: preservedAssignments,
     debtSeasons,
     gameOver: isBankrupt,
+    victory: nextState.victory || nextYear >= COTTON_GIN_YEAR,
   };
 }
 

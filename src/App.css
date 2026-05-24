@@ -288,6 +288,60 @@
   margin-top: 0.5rem;
 }
 
+/* ── SeasonOutlookPanel ──────────────────────────────────────────────────── */
+
+.outlook-meta {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+}
+
+.outlook-block {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.55rem 0.65rem;
+  margin-bottom: 0.55rem;
+  background: var(--bg);
+  text-align: left;
+}
+
+.outlook-block:last-child {
+  margin-bottom: 0;
+}
+
+.outlook-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.outlook-value {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0.12rem 0 0.18rem;
+}
+
+.outlook-hint {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.risk-low {
+  color: var(--green);
+}
+
+.risk-elevated {
+  color: var(--yellow);
+}
+
+.risk-high,
+.risk-critical {
+  color: var(--red);
+}
+
 /* ── MarketPanel ─────────────────────────────────────────────────────────── */
 
 .market-row {
@@ -446,6 +500,38 @@
 }
 
 .btn-new-game:hover { opacity: 0.85; }
+
+.overlay-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.btn-export {
+  padding: 0.4rem 1.2rem;
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+.btn-export:hover { border-color: var(--text); color: var(--text); opacity: 1; }
+
+.btn-view-ledger {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+}
+
+.btn-view-ledger:hover { color: var(--text); }
 
 .btn-reset {
   margin-left: auto;

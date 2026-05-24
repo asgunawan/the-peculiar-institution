@@ -1,5 +1,14 @@
 // App.jsx — Root coordinator for game panels and high-level flow.
-import { SEASONS, SEASON_TASKS, SOIL_RESTORE_PER_WORKER } from "./gameLogic/constants.js";
+import { useEffect, useState } from "react";
+import {
+  CURING_CAPACITY_PER_WORKER,
+  SEASONS,
+  SEASONAL_WORKER_UPKEEP,
+  SEASON_TASKS,
+  SOIL_RESTORE_PER_WORKER,
+} from "./gameLogic/constants.js";
+import { resolveSeason } from "./gameLogic/seasonEngine.js";
+import { downloadLog, getLog } from "./gameLogic/runLogger.js";
 import { useGameSession } from "./hooks/useGameSession.js";
 import { useToastNotifications } from "./hooks/useToastNotifications.js";
 import { useMarketActions } from "./hooks/useMarketActions.js";
@@ -8,6 +17,7 @@ import GameHeader from "./components/GameHeader.jsx";
 import WorkforcePanel from "./components/WorkforcePanel.jsx";
 import LandPanel from "./components/LandPanel.jsx";
 import ResourcePanel from "./components/ResourcePanel.jsx";
+import SeasonOutlookPanel from "./components/SeasonOutlookPanel.jsx";
 import MarketPanel from "./components/MarketPanel.jsx";
 import EventLog from "./components/EventLog.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
@@ -18,6 +28,12 @@ const SAVE_KEY = "the-peculiar-institution-save-v1";
 export default function App() {
   const { state, setState, currentPrice, setCurrentPrice, resetGame } = useGameSession(SAVE_KEY);
   const { toasts, addToast } = useToastNotifications();
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
+
+  function handleNewGame() {
+    setOverlayDismissed(false);
+    resetGame();
+  }
   const { handleAdvanceSeason } = useSeasonAdvance({ state, setState, setCurrentPrice, addToast });
   const {
     handleAssignmentChange,
@@ -28,6 +44,14 @@ export default function App() {
   } = useMarketActions({ state, setState, currentPrice, addToast });
 
   const season = SEASONS[state.seasonIndex];
+
+  // Expose run-log helpers on window for console access during playtesting.
+  // Call window.downloadRunLog() in the browser console to save a JSON file.
+  useEffect(() => {
+    window.downloadRunLog = downloadLog;
+    window.getRunLog = getLog;
+  }, []);
+
   const maintenanceSoilGain = state.plots.length > 0
     ? Math.round(((state.assignments.maintenance || 0) * SOIL_RESTORE_PER_WORKER) / state.plots.length)
     : 0;
@@ -36,8 +60,74 @@ export default function App() {
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (state.assignments[t] || 0), 0);
   const isOverAssigned = totalAssigned > state.workers;
   const unassignedWorkers = Math.max(0, state.workers - totalAssigned);
+  const nextStatePreview = resolveSeason(state);
+  const nextSeasonName = SEASONS[nextStatePreview.seasonIndex];
 
-  if (state.gameOver) {
+  const projectedLeafAfterAdvance =
+    nextStatePreview.resources.rawTobacco + nextStatePreview.resources.curedTobacco;
+  let debtRisk = {
+    level: "low",
+    title: "Low",
+    detail: `Projected treasury after next advance: $${nextStatePreview.money.toFixed(2)}.`,
+  };
+
+  if (nextStatePreview.gameOver) {
+    debtRisk = {
+      level: "critical",
+      title: "Foreclosure",
+      detail: "Projected state crosses foreclosure conditions on next advance.",
+    };
+  } else if (nextStatePreview.money < 0 && projectedLeafAfterAdvance === 0) {
+    debtRisk = {
+      level: "high",
+      title: "High",
+      detail: "Negative cash with no inventory buffer after next advance.",
+    };
+  } else if (nextStatePreview.money < 0) {
+    debtRisk = {
+      level: "elevated",
+      title: "Elevated",
+      detail: "Negative cash projected, but inventory remains to sell.",
+    };
+  } else if (nextSeasonName === "Winter" && nextStatePreview.money < state.workers * SEASONAL_WORKER_UPKEEP) {
+    debtRisk = {
+      level: "elevated",
+      title: "Elevated",
+      detail: "Treasury is slim heading into Winter upkeep costs.",
+    };
+  }
+
+  let curingOutlook = {
+    timing: "Next Winter",
+    shortfall: null,
+    detail: "Curing risk becomes visible once Fall harvest projections are available.",
+  };
+
+  if (season === "Winter") {
+    const curingCapacity = (state.assignments.curing || 0) * CURING_CAPACITY_PER_WORKER;
+    const shortfall = Math.max(0, state.resources.rawTobacco - curingCapacity);
+    curingOutlook = {
+      timing: "This Winter",
+      shortfall,
+      detail:
+        shortfall > 0
+          ? `${shortfall.toLocaleString()} lbs are on track to rot with current curing allocation.`
+          : "Current curing allocation can process all available raw leaf.",
+    };
+  } else if (season === "Fall") {
+    const curingCapacity = (nextStatePreview.assignments.curing || 0) * CURING_CAPACITY_PER_WORKER;
+    const shortfall = Math.max(0, nextStatePreview.resources.rawTobacco - curingCapacity);
+    curingOutlook = {
+      timing: "Next Winter",
+      shortfall,
+      detail:
+        shortfall > 0
+          ? `${shortfall.toLocaleString()} lbs are projected to rot if you advance with current plan.`
+          : "Projected Winter curing plan can process all expected raw leaf.",
+    };
+  }
+
+  if (state.gameOver && !overlayDismissed) {
     return (
       <div className="overlay-screen game-over">
         <h1>The Plantation is Lost</h1>
@@ -46,12 +136,16 @@ export default function App() {
           tobacco left to liquidate, the operation has been foreclosed.
         </p>
         <p className="overlay-year">Year {state.year}</p>
-        <button className="btn btn-new-game" onClick={resetGame}>Try Again</button>
+        <div className="overlay-actions">
+          <button className="btn btn-new-game" onClick={handleNewGame}>Try Again</button>
+          <button className="btn btn-export" onClick={downloadLog}>Export Run Log</button>
+          <button className="btn btn-view-ledger" onClick={() => setOverlayDismissed(true)}>View Final Ledger</button>
+        </div>
       </div>
     );
   }
 
-  if (state.victory) {
+  if (state.victory && !overlayDismissed) {
     return (
       <div className="overlay-screen victory">
         <h1>A New Era Begins</h1>
@@ -62,7 +156,11 @@ export default function App() {
         </p>
         <p>The world is about to change. Your tobacco operation survives, but the future belongs to cotton.</p>
         <p className="overlay-year">Treasury: ${state.money.toFixed(0)}</p>
-        <button className="btn btn-new-game" onClick={resetGame}>Play Again</button>
+        <div className="overlay-actions">
+          <button className="btn btn-new-game" onClick={handleNewGame}>Play Again</button>
+          <button className="btn btn-export" onClick={downloadLog}>Export Run Log</button>
+          <button className="btn btn-view-ledger" onClick={() => setOverlayDismissed(true)}>View Final Ledger</button>
+        </div>
       </div>
     );
   }
@@ -84,8 +182,15 @@ export default function App() {
           </div>
           <div className="col-right">
             <ResourcePanel resources={state.resources} />
+            <SeasonOutlookPanel
+              nextSeason={nextSeasonName}
+              nextYear={nextStatePreview.year}
+              debtRisk={debtRisk}
+              curingOutlook={curingOutlook}
+            />
             <MarketPanel
               money={state.money}
+              season={season}
               curedTobacco={state.resources.curedTobacco}
               currentPrice={currentPrice}
               onSellTen={handleSellTen}
@@ -114,11 +219,14 @@ export default function App() {
               {unassignedWorkers} worker(s) are unassigned. Advancing will continue with idle labor.
             </p>
           )}
+          <button className="btn btn-export" onClick={downloadLog}>
+            Export Run Log
+          </button>
           <button
             className="btn btn-reset"
             onClick={() => {
               if (window.confirm("Reset and start a new game? All progress will be lost.")) {
-                resetGame();
+                handleNewGame();
               }
             }}
           >

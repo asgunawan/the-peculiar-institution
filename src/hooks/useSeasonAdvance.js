@@ -5,6 +5,7 @@ import {
   SEASON_TASKS,
 } from "../gameLogic/constants.js";
 import { resolveSeason, getSellPrice } from "../gameLogic/seasonEngine.js";
+import { logSeason } from "../gameLogic/runLogger.js";
 
 /**
  * Advances the game by one season with assignment validation and outcome toasts.
@@ -27,6 +28,7 @@ export function useSeasonAdvance({ state, setState, setCurrentPrice, addToast })
     }
 
     const next = resolveSeason(state);
+    logSeason(state, next);
     const rawGained = next.resources.rawTobacco - state.resources.rawTobacco;
     const curedGained = next.resources.curedTobacco - state.resources.curedTobacco;
     const moneyDelta = next.money - state.money;

@@ -1,8 +1,16 @@
 // MarketPanel.jsx — Buy/sell interface: sell cured tobacco, buy workers, buy land.
 import { WORKER_COST, PLOT_COST } from "../gameLogic/constants.js";
 
+const PLOT_TIMING_HINT = {
+  Spring: "Buy before advancing to plant it this season.",
+  Summer: "⚠ Bought now, this plot won't be plantable until next Spring.",
+  Fall:   "⚠ Bought now, this plot won't be plantable until next Spring.",
+  Winter: "Buy now to have it ready to plant next Spring.",
+};
+
 export default function MarketPanel({
   money,
+  season,
   curedTobacco,
   currentPrice,
   onSellTen,
@@ -63,7 +71,7 @@ export default function MarketPanel({
       <div className="market-row">
         <div className="market-copy">
           <p className="market-item">Buy a Plot of Land</p>
-          <p className="market-sub">${PLOT_COST} each &mdash; expands acreage with fresh, high-yield soil.</p>
+          <p className="market-sub">${PLOT_COST} each &mdash; {PLOT_TIMING_HINT[season]}</p>
         </div>
         <button
           className="btn btn-buy"

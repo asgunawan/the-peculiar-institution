@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createInitialState } from "../gameLogic/initialState.js";
 import { getSellPrice } from "../gameLogic/seasonEngine.js";
 import { normalizeLog } from "../gameLogic/logUtils.js";
+import { clearLog } from "../gameLogic/runLogger.js";
 
 function loadSavedSession(saveKey) {
   const fresh = createInitialState();
@@ -49,6 +50,7 @@ export function useGameSession(saveKey) {
   }, [saveKey, state, currentPrice]);
 
   const resetGame = useCallback(() => {
+    clearLog();
     const fresh = createInitialState();
     setState(fresh);
     setCurrentPrice(getSellPrice(fresh.year));

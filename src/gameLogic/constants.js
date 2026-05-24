@@ -93,8 +93,9 @@ export const FIELD_NAMES = [
 // Applied every Winter as recurring financial pressure.
 export const SEASONAL_WORKER_UPKEEP = 7;
 
-// Consecutive seasons in debt before foreclosure if no inventory remains.
-export const DEBT_FORECLOSURE_SEASONS = 2;
+// Gameplay-scaled: allow one extra recovery season before foreclosure when
+// inventory is exhausted, so debt pressure is sustained but less abrupt.
+export const DEBT_FORECLOSURE_SEASONS = 3;
 
 // ── Starting conditions ─────────────────────────────────────────────────────
 export const STARTING_MONEY = 500;
