@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createInitialState } from "../gameLogic/initialState.js";
 import { getSellPrice } from "../gameLogic/seasonEngine.js";
-import { normalizeLog } from "../gameLogic/logUtils.js";
+import { normalizeSavedState } from "../gameLogic/saveNormalizer.js";
 import { clearLog } from "../gameLogic/runLogger.js";
 
 function loadSavedSession(saveKey) {
@@ -20,14 +20,8 @@ function loadSavedSession(saveKey) {
       return defaultSession;
     }
 
-    const { log, nextId } = normalizeLog(savedState.log, savedState.logCounter ?? 1);
-
     return {
-      state: {
-        ...savedState,
-        log,
-        logCounter: nextId,
-      },
+      state: normalizeSavedState(savedState, fresh),
       currentPrice: typeof savedPrice === "number" ? savedPrice : getSellPrice(savedState.year),
     };
   } catch {
