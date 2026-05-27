@@ -1,5 +1,8 @@
 # GitHub Copilot Instructions — The Peculiar Institution
 
+## Clarification rule
+If the user's intent is unclear — ambiguous bug report, vague feature request, screenshot with no description — use `vscode_askQuestions` to ask before assuming and implementing. Ask as many clarifying questions as needed, and ask follow-up questions if the first answer raises new ambiguities. The user is available and prefers to answer questions over having the agent guess and waste effort.
+
 ## Project summary
 Text-based antebellum plantation economic simulation. React + Vite. No art assets.
 Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
