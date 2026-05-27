@@ -1,5 +1,5 @@
 // MarketPanel.jsx — Buy/sell interface: sell cured tobacco, buy workers, buy land.
-import { ENSLAVED_PURCHASE_COST, FREE_WORKER_WAGE_PER_SEASON, PLOT_COST } from "../gameLogic/constants.js";
+import { BASE_YIELD_PER_PLOT, ENSLAVED_PURCHASE_COST, FREE_WORKER_WAGE_PER_SEASON, PLOT_COST } from "../gameLogic/constants.js";
 
 const PLOT_TIMING_HINT = {
   Spring: "Buy before advancing to plant it this season.",
@@ -104,6 +104,7 @@ export default function MarketPanel({
         <div className="market-copy">
           <p className="market-item">Buy a Plot of Land</p>
           <p className="market-sub">${PLOT_COST} each &mdash; {PLOT_TIMING_HINT[season]}</p>
+          <p className="market-sub">Fresh plot yields ~{BASE_YIELD_PER_PLOT.toLocaleString()} lbs/yr at 100% soil; ~{(BASE_YIELD_PER_PLOT / 2).toLocaleString()} lbs at 50% soil.</p>
         </div>
         <button
           className="btn btn-buy"
