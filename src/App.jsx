@@ -177,6 +177,17 @@ export default function App() {
       value: `~${projectedRaw.toLocaleString()} lbs raw leaf`,
       detail: `${tendedPlots.length} plot(s) tended \u2192 ~${projectedCured.toLocaleString()} lbs cured if fully processed in Winter.`,
     };
+  } else if (season === "Fall") {
+    const tendedPlots = state.plots.filter(p => p.state === "tended");
+    if (tendedPlots.length > 0) {
+      const rawGained = Math.max(0, nextStatePreview.resources.rawTobacco - state.resources.rawTobacco);
+      const projectedCured = Math.floor(rawGained / CURING_RATIO);
+      harvestOutlook = {
+        label: "Fall Harvest",
+        value: `~${rawGained.toLocaleString()} lbs raw leaf`,
+        detail: `${tendedPlots.length} plot(s) ready \u2192 ~${projectedCured.toLocaleString()} lbs cured if fully processed this Winter.`,
+      };
+    }
   }
 
   if (state.gameOver && !overlayDismissed) {
