@@ -48,24 +48,36 @@ export default function WorkforcePanel({ workers, enslavedCount, freeCount, seas
       {activeTasks.map((task) => {
         const current = assignments[task] || 0;
         const maxForTask = getMaxForTask(task);
-        const isTendingWithAllocation = task === TASKS.TENDING && current > 0;
-        const tendingEfficiency = isTendingWithAllocation
-          ? getTendingEfficiency(current, plots)
-          : 0;
+
+        // Tending with workers: compute hint inline to keep the colored % span,
+        // but use planted-only count (not all plots) and check for surplus.
+        let taskHintNode;
+        if (task === TASKS.TENDING && current > 0) {
+          const plantedCount = plots.filter(p => p.state === "planted").length;
+          const fullNeededCeil = Math.ceil(plantedCount * WORKERS_PER_PLOT_FULL_TEND);
+          const excess = current - fullNeededCeil;
+          if (excess > 0) {
+            taskHintNode = `Full yield achieved. ${excess} worker${excess !== 1 ? "s" : ""} unneeded — reassign for hire-out income.`;
+          } else {
+            const eff = getTendingEfficiency(current, plots);
+            taskHintNode = (
+              <>
+                {`${current}/${fullNeededCeil} workers \u2192 ~`}
+                <span className={getYieldClass(eff)}>{eff}%</span>
+                {" yield this Fall."}
+              </>
+            );
+          }
+        } else {
+          taskHintNode = getTaskHint(task, current, plots, season);
+        }
+
         return (
           <div className="task-row" key={task}>
             <div className="task-label">
               {getTaskLabel(task, season)}
               <span className="task-hint">
-                {isTendingWithAllocation ? (
-                  <>
-                    {`${current}/${Math.ceil(plots.length * WORKERS_PER_PLOT_FULL_TEND)} workers \u2192 ~`}
-                    <span className={getYieldClass(tendingEfficiency)}>{tendingEfficiency}%</span>
-                    {" yield this Fall."}
-                  </>
-                ) : (
-                  getTaskHint(task, assignments[task] || 0, plots, season)
-                )}
+                {taskHintNode}
               </span>
             </div>
             <div className="task-controls">

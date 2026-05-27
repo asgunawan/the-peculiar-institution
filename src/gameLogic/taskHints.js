@@ -36,7 +36,8 @@ export function getTaskLabel(task, season) {
 }
 
 export function getTendingEfficiency(count, plots) {
-  const fullNeeded = plots.length * WORKERS_PER_PLOT_FULL_TEND;
+  const planted = plots.filter((p) => p.state === "planted").length;
+  const fullNeeded = planted * WORKERS_PER_PLOT_FULL_TEND;
   if (fullNeeded <= 0) return 0;
   return Math.round(Math.min(count / fullNeeded, 1) * 100);
 }
@@ -51,13 +52,18 @@ export function getTaskHint(task, count, plots, season) {
   const numPlots = plots.length;
 
   if (task === TASKS.TENDING) {
-    const fullNeeded = numPlots * WORKERS_PER_PLOT_FULL_TEND;
+    const plantedCount = plots.filter((p) => p.state === "planted").length;
+    const fullNeeded = plantedCount * WORKERS_PER_PLOT_FULL_TEND;
     const fullNeededCeil = Math.ceil(fullNeeded);
     if (count === 0) {
-      return `Need ${fullNeededCeil} workers for full yield on ${numPlots} plot${numPlots !== 1 ? "s" : ""}. Under-staffed fields yield as low as 30%.`;
+      return `Need ${fullNeededCeil} workers for full yield on ${plantedCount} planted plot${plantedCount !== 1 ? "s" : ""}. Under-staffed fields yield as low as 30%.`;
+    }
+    const excess = count - fullNeededCeil;
+    if (excess > 0) {
+      return `Full yield achieved. ${excess} worker${excess !== 1 ? "s" : ""} unneeded — reassign for hire-out income.`;
     }
     const eff = getTendingEfficiency(count, plots);
-    return `${count}/${fullNeededCeil} workers -> ~${eff}% yield this Fall.`;
+    return `${count}/${fullNeededCeil} workers — ~${eff}% yield this Fall.`;
   }
 
   if (task === TASKS.CURING) {
@@ -90,13 +96,18 @@ export function getTaskHint(task, count, plots, season) {
   }
 
   if (task === TASKS.PLANTING) {
-    const fallowCount = plots.filter(p => p.state === "fallow").length;
-    if (fallowCount === 0) return "No fallow land to plant — all plots already carry crops.";
-    const willPlant = Math.min(count, fallowCount);
-    if (count === 0) return `${fallowCount} fallow plot${fallowCount !== 1 ? "s" : ""} available. Assign 1 worker per plot to plant.`;
+    const activeFallowCount = plots.filter(p => p.state === "fallow" && !p.resting).length;
+    const restingCount = plots.filter(p => p.state === "fallow" && p.resting).length;
+    const restingNote = restingCount > 0 ? ` (${restingCount} resting)` : "";
+    if (activeFallowCount === 0) {
+      if (restingCount > 0) return `All ${restingCount} fallow plot${restingCount !== 1 ? "s are" : " is"} set to rest. Return plots to rotation to plant.`;
+      return "No fallow land to plant — all plots already carry crops.";
+    }
+    const willPlant = Math.min(count, activeFallowCount);
+    if (count === 0) return `${activeFallowCount} active plot${activeFallowCount !== 1 ? "s" : ""} available to plant${restingNote}. Assign 1 worker per plot.`;
     const extra = count - willPlant;
-    const result = `${willPlant}/${fallowCount} fallow plots will be planted.`;
-    return extra > 0 ? `${result} ${extra} worker${extra !== 1 ? "s are" : " is"} surplus (more workers than fallow land).` : result;
+    const result = `${willPlant}/${activeFallowCount} active plots will be planted${restingNote}.`;
+    return extra > 0 ? `${result} ${extra} worker${extra !== 1 ? "s are" : " is"} surplus.` : result;
   }
 
   if (task === TASKS.HARVESTING) {
@@ -104,8 +115,10 @@ export function getTaskHint(task, count, plots, season) {
     if (readyCount === 0) return "No plots are ready to harvest yet.";
     const willHarvest = Math.min(count, readyCount);
     if (count === 0) return `${readyCount} plot${readyCount !== 1 ? "s are" : " is"} ready to harvest. Assign 1 worker per plot.`;
+    const extra = count - willHarvest;
     const missed = readyCount - willHarvest;
     const result = `${willHarvest}/${readyCount} plots will be harvested.`;
+    if (extra > 0) return `${result} ${extra} worker${extra !== 1 ? "s are" : " is"} surplus — reassign for hire-out income.`;
     return missed > 0 ? `${result} ${missed} plot${missed !== 1 ? "s will be" : " will be"} left unharvested — assign more workers.` : result;
   }
 
