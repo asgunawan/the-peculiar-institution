@@ -36,7 +36,11 @@ export const SOIL_THRESHOLDS = {
 export const BASE_YIELD_PER_PLOT = 2000; // lbs raw tobacco
 
 // Soil health lost per plot each harvest. Monoculture tobacco is brutal on soil.
-export const SOIL_DEGRADE_PER_HARVEST = 15;
+// Historical calibration: Wikipedia (Tobacco in American colonies) cites Craven (1926):
+// "Tobacco will wear out the soil in just a few years." Chesapeake consensus is
+// 3-5 years of continuous planting to meaningful exhaustion, 5-7 to abandonment.
+// At -20/harvest: yield ~60% by year 2, ~40% by year 3, exhausted by year 5 — matches.
+export const SOIL_DEGRADE_PER_HARVEST = 20;
 
 // Soil health restored per maintenance worker during Winter (off-season fieldwork only).
 // Growing-season maintenance has no soil effect — exhausted tobacco land does not recover
