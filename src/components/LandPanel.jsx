@@ -22,7 +22,12 @@ export default function LandPanel({ plots, maintenanceSoilGain = 0, onTogglePlot
         const previewGain = Math.max(0, Math.min(maintenanceSoilGain, 100 - roundedSoil));
         const projectedSoil = Math.min(100, roundedSoil + previewGain);
         const isFallow = plot.state === "fallow";
-        const canRecover = isFallow && roundedSoil < FALLOW_RECOVERY_CAP;
+        const atOrAboveCap = isFallow && plot.soilHealth >= FALLOW_RECOVERY_CAP;
+        // How much soil actually recovers this season (may be less than full if near cap)
+        const actualFallowGain = isFallow && !atOrAboveCap
+          ? Math.min(FALLOW_RECOVERY_PER_SEASON, FALLOW_RECOVERY_CAP - plot.soilHealth)
+          : 0;
+        const willCapThisSeason = actualFallowGain > 0 && actualFallowGain < FALLOW_RECOVERY_PER_SEASON;
 
         return (
           <div className={`plot-row${plot.resting ? " plot-resting" : ""}`} key={plot.id}>
@@ -38,10 +43,19 @@ export default function LandPanel({ plots, maintenanceSoilGain = 0, onTogglePlot
               {previewGain > 0 && (
                 <div className="soil-bar-preview" style={{ width: `${previewGain}%` }} />
               )}
+              <div className="soil-cap-marker" style={{ left: `${FALLOW_RECOVERY_CAP}%` }} />
             </div>
             <span className="soil-pct">
               {roundedSoil}%{previewGain > 0 ? ` → ${projectedSoil}%` : ""}
-              {canRecover && <span className="fallow-recovery-hint"> (+{FALLOW_RECOVERY_PER_SEASON}/season)</span>}
+              {atOrAboveCap && (
+                <span className="fallow-recovery-hint at-cap"> (recovery limit)</span>
+              )}
+              {willCapThisSeason && (
+                <span className="fallow-recovery-hint"> (+{Math.round(actualFallowGain)} → {FALLOW_RECOVERY_CAP}% cap)</span>
+              )}
+              {actualFallowGain >= FALLOW_RECOVERY_PER_SEASON && (
+                <span className="fallow-recovery-hint"> (+{FALLOW_RECOVERY_PER_SEASON}/season)</span>
+              )}
             </span>
             {isFallow && onTogglePlotRest && (
               <button

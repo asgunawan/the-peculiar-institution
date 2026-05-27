@@ -234,6 +234,7 @@
 .plot-state.plot-state-resting { color: var(--text-dim); font-style: italic; }
 
 .soil-bar-track {
+  position: relative;
   display: flex;
   height: 10px;
   background: var(--bg);
@@ -259,6 +260,17 @@
   transition: width 0.4s ease;
 }
 
+/* Thin line marking the fallow recovery cap on the soil bar */
+.soil-cap-marker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: rgba(210, 160, 60, 0.75);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .soil-pct {
   font-size: 0.78rem;
   color: var(--text-dim);
@@ -269,6 +281,10 @@
   font-size: 0.72rem;
   color: var(--green);
   opacity: 0.8;
+}
+.fallow-recovery-hint.at-cap {
+  color: var(--text-dim);
+  opacity: 0.65;
 }
 
 .btn-plot-rest {
