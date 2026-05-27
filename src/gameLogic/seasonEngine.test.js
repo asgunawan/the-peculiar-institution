@@ -252,6 +252,41 @@ describe("resolveSeason", () => {
     expect(parseFloat((next.money - startMoney).toFixed(2))).toBe(expectedIncome);
   });
 
+  it("Spring planting skips a plot marked resting", () => {
+    const base = createInitialState();
+    const state = createState({
+      seasonIndex: 0,
+      plots: [
+        { ...base.plots[0], id: 1, state: "fallow", resting: true },
+        { ...base.plots[0], id: 2, name: "Plot 2", state: "fallow", resting: false },
+      ],
+      assignments: { planting: 2, tending: 0, harvesting: 0, curing: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+
+    expect(next.plots.find((p) => p.id === 1).state).toBe("fallow");  // resting — skipped
+    expect(next.plots.find((p) => p.id === 2).state).toBe("planted"); // active — planted
+  });
+
+  it("Spring plants only active fallow plots when all others are resting", () => {
+    const base = createInitialState();
+    const state = createState({
+      seasonIndex: 0,
+      plots: [
+        { ...base.plots[0], id: 1, state: "fallow", resting: false },
+        { ...base.plots[0], id: 2, name: "Plot 2", state: "fallow", resting: true },
+        { ...base.plots[0], id: 3, name: "Plot 3", state: "fallow", resting: true },
+      ],
+      assignments: { planting: 5, tending: 0, harvesting: 0, curing: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+    const plantedCount = next.plots.filter((p) => p.state === "planted").length;
+
+    expect(plantedCount).toBe(1);
+  });
+
   it("maintenance workers do not generate hire-out income in Winter", () => {
     const startMoney = 200;
     const state = createState({
