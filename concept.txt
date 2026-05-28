@@ -472,6 +472,198 @@ So your labor calendar looks something like: Jan-Feb → soil prep, Mar-Apr → 
 
 Actual farming techniques — and here's where it gets fascinating for your game
 
+================================================================================
+DESIGN VISION & ROADMAP  (added May 2026)
+================================================================================
+
+CORE DESIGN STATEMENT
+---------------------
+Primary:   A (mostly) historically accurate game about a cotton/tobacco plantation
+           that serves as a playable educational experience — teaching the mindset
+           of planters and why they were economically incentivized to enslave people.
+
+Secondary: A farming resource-management game with upgrades, multiple viable paths,
+           flavor texts, historical events, and fun facts about tobacco farming,
+           cotton farming, slave infrastructure, and free labor.
+
+The game should leave the player with a sufficient picture of:
+  1. How tobacco and cotton farming actually worked (soil, seasons, labor calendars)
+  2. Slave infrastructure and behavior (quarters, drivers, overseers, gang/task
+     systems, buying, auction, resistance, management style tradeoffs)
+  3. An upgrade tree that teaches the real "baseline" of plantation farming and
+     why each technology or management choice mattered
+  4. (Post-1.0) The actual supply chain — ginning, baling, selling to mills, cigars
+
+CURRENT STATE: v0.1 (MVP complete, May 2026)
+--------------------------------------------
+  [x] 4-season turn loop (Spring planting → Summer tending → Fall harvest → Winter cure)
+  [x] Soil health degradation from tobacco monoculture + maintenance recovery
+  [x] Enslaved worker upkeep pressure and debt/foreclosure system
+  [x] Free (hired) worker mechanic
+  [x] Plot resting (fallow year to recover soil)
+  [x] Market: buy/sell tobacco, buy workers, buy land
+  [x] Season Outlook panel (debt risk, curing shortfall, harvest projection)
+  [x] 10-slot save/load system + JSON export/import
+  [x] Run log export + analysis script (scripts/analyze_run.py)
+  [x] Victory condition: survive to 1793 (cotton gin arrival)
+  [x] Game over: foreclosure after repeated debt with no inventory
+
+
+FEATURE PRIORITY LIST (toward 1.0)
+-----------------------------------
+Ordered roughly by dependency and narrative arc. No strict version numbers —
+implement in this order unless a later item becomes a blocker.
+
+── TIER 1: Complete the tobacco era (0.1 → 0.2) ──────────────────────────────
+
+[ ] Random events — tobacco blight, drought, early frost, price crash, good harvest
+    Historically grounded. Each event has a flavor text explaining the real cause.
+    Should feel like "bad luck that a real planter would recognize."
+
+[ ] Flavor text system — short historical notes on first occurrence of each mechanic
+    e.g. first time soil drops below 30%: note about Chesapeake exhaustion & westward
+    migration. First winter curing shortfall: note about fire curing vs air curing.
+    Inline in the event log. Not a popup.
+
+[ ] Overseer system
+    - Hire a free white overseer (recurring salary, higher than field labor rate)
+    - Overseer provides a productivity bonus (multiplier on all enslaved labor output)
+    - Also introduces a "discipline style" slider: lenient ↔ aggressive
+    - Aggressive: short-term productivity boost, builds resistance over time
+    - Lenient: lower productivity, slower resistance buildup
+    - Research note: most small-to-mid planters supervised themselves before ~1820;
+      overseers were common on larger operations 500+ acres.
+
+[ ] Resistance / morale system (abstracted, not per-worker)
+    - Single "plantation morale" stat (0–100)
+    - Affected by: crowded quarters, aggressive overseer, long work seasons,
+      insufficient food allocation (future upgrade), successful resistance events
+    - At low morale: random productivity penalties, occasional work slowdown events
+    - Flavor text on events references real resistance forms: feigned illness,
+      tool-breaking, slowdowns, running away (not escape — absences)
+    - This is the game's primary "historically accurate friction" signal
+
+── TIER 2: Cotton gin + crop pivot (0.2 → 0.3) ──────────────────────────────
+
+[ ] Cotton crop type
+    - New plot assignment: cropType = "tobacco" | "cotton"
+    - Different labor calendar: cotton has 7+ harvest passes (multiple Fall turns
+      or a new "Late Fall" sub-season), no curing step, but requires ginning
+    - Cotton gin as a purchasable upgrade (1793+): dramatically increases
+      ginning throughput. Pre-gin: manual seeding is bottleneck, very slow.
+    - Soil impact: cotton also degrades soil but differently (less deep-root
+      damage, more surface compaction)
+    - Research note: see concept.txt cotton farming section above for calendar detail
+
+[ ] Crop pivot mechanics
+    - After 1793 victory screen, player can continue into "cotton era" instead of
+      starting over
+    - OR: new game starts in cotton era (1793+) with tobacco as legacy crop
+    - Tobacco becomes progressively less viable: price pressure from Virginia
+      import competition + British import duties modeled as a gradual price decay
+    - Players can stubbornly keep growing tobacco — it just becomes the "hard mode"
+      economic choice. No forced pivot. The market does the nudging.
+
+[ ] Cotton price dynamics
+    - Post-1793: cotton starts high (new crop, high demand from British mills)
+    - 1800s onward: price falls as more Southern planters adopt cotton — simulates
+      the real price crash of the 1820s if the player holds too long
+    - This mirrors the tobacco price pressure the player already experienced
+
+── TIER 3: Slave infrastructure and management depth (0.3 → 0.5) ─────────────
+
+[ ] Slave quarters upgrade
+    - Purchasable: basic cabins (1 per 4 workers) → proper quarters (1 per 2)
+    - Affects morale and resistance buildup rate
+    - Flavor text: actual descriptions of quarters from WPA slave narratives
+
+[ ] Gang vs. task labor system toggle
+    - Gang: all workers assigned to same task, overseen collectively
+      → higher productivity, higher resistance buildup
+    - Task: each worker assigned an individual daily task quota
+      → lower peak productivity, lower resistance, allows small personal plots
+    - Real historical tension: gang system dominated cotton; task system was more
+      common in rice and some tobacco regions. Let the player discover why.
+
+[ ] Enslaved driver system
+    - Alternative to paid overseer: elevate an enslaved worker as a driver
+    - Lower cost than overseer (no cash salary, only small privileges)
+    - Less productivity bonus than free overseer but builds complex morale dynamics
+      (resentment from peers, loyalty vs. resistance split)
+    - Historically accurate: enslaved drivers were common on larger plantations
+
+[ ] Slave auction (unlockable upgrade)
+    - Requires: "established planter" milestone (e.g. 5+ workers, 3+ plots)
+    - Auction replaces flat broker price with variable pricing
+    - Factors: age, listed "skill" (field hand vs. carpenter vs. cook), season
+      (spring auction before planting season = higher prices)
+    - Flavor text: real auction notice language from historical records
+    - Can also sell workers at auction (dark mechanic — explicitly presented as such)
+    - Research note: New Orleans and Richmond were major auction hubs; spring
+      auctions in March-April were the most active
+
+[ ] Food / subsistence allocation
+    - Workers require a food allocation per season (corn meal, pork ration)
+    - Can be grown on-plot (dedicate a field to corn = no tobacco income that season)
+      or purchased from market (costs money but frees all land for cash crops)
+    - Historically: most planters grew some corn; buying all food was a luxury
+    - Insufficient food → morale penalty, productivity penalty
+    - Flavor text: Frederick Douglass's accounts of weekly food rations
+
+── TIER 4: Polish, events, and education layer (0.5 → 1.0) ───────────────────
+
+[ ] Historical events calendar
+    - Fixed-year events that the player cannot avoid, just react to:
+      1786: Virginia tobacco glut (price floor hit)
+      1790: First US Census — flavor text about counting enslaved people as 3/5
+      1793: Cotton gin (already in as victory condition — expand into pivot moment)
+      1800: Gabriel's Rebellion — morale event, resistance spike
+      1807: Slave trade abolition (domestic trade continues — flavor text)
+      1820: Missouri Compromise — flavor text
+    - Each event: 1 paragraph of real history + mechanical effect
+
+[ ] Upgrades / technology tree
+    - Tobacco: fire curing → flue curing (better cure ratio), crop rotation
+      knowledge, drainage ditches (slow soil degradation), fertilizer (guano imports)
+    - Cotton: cotton gin tiers, cotton press (bale compression for shipping),
+      steam-powered gin (late game)
+    - Infrastructure: barn storage, quarters, overseer's house, main house
+      (each has a morale/productivity effect and a flavor text about plantation layout)
+
+[ ] Flavor text log (v1.0 version of education layer)
+    - Each mechanic, on first trigger, logs a short historical note (1-3 sentences)
+    - Referenced to a real source (not academic-style, just "— from a 1825 Virginia
+      planter's diary" style attribution)
+    - Covers: soil exhaustion, gang labor, food rations, resistance, auction pricing,
+      overseer roles, cotton gin impact
+
+[ ] Difficulty / scenario modes
+    - Small farmer (1 plot, 2 workers, start tobacco — historical median small planter)
+    - Established planter (3 plots, 6 workers, 1793 — pivot immediately to cotton)
+    - Historical scenario: Monticello 1796 (Jefferson's actual tobacco-to-wheat pivot)
+
+[ ] Win conditions beyond survival
+    - Reach cotton gin and stay solvent: current victory
+    - "Dynasty" victory: reach 1830 with 10+ plots, net positive, cotton majority
+    - "Bankruptcy" is not just game over — final ledger shows accumulated wealth
+      transferred to creditors, flavor text about planter debt culture
+
+── POST-1.0 (explicitly out of scope for now) ────────────────────────────────
+
+[ ] Supply chain extension: ginning → baling → selling to named mills,
+    actual commodity contracts, New Orleans factor system
+[ ] Named individual enslaved workers with skill profiles and family units
+[ ] Escape / freedom mechanic (Underground Railroad era)
+[ ] Per-worker resistance events (not just morale stat)
+[ ] Almanac / historical facts ledger (unlockable reference entries)
+[ ] Audio (ambient, no music — maybe period-accurate work songs as optional)
+[ ] Tobacco cigar/cigarette manufacturing chain
+
+================================================================================
+END ROADMAP
+================================================================================
+
+
 Irrigation: That was about the limit of cotton growing until you could pump underground water for irrigation.[1] In other words, antebellum cotton was almost entirely rain-fed. There was no meaningful irrigation system — you were entirely at the mercy of rainfall, which is a great weather/drought mechanic for your game.
 
 Fertilizer: Planters were aware of the problem but had limited options. They fertilized the rows with ginned seed or guano, which was imported from South America.[1] Guano (bird droppings) was actually a major traded commodity in the 1800s — so you'd have a fertilizer supply chain that itself depends on international trade. Without the cattle and hogs of traditional farms, they had little natural fertilizer to restore the land, and artificial fertilizer was primitive before the Civil War.[3]

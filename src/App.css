@@ -499,6 +499,192 @@
 
 .btn-buy:not(:disabled):hover { opacity: 0.8; }
 
+/* ── Side Menu (hamburger drawer) ────────────────────────────────────────── */
+
+/*
+  Uses a <details>/<summary> element so it works without JS state.
+  The toggle button is fixed to the left viewport edge.
+  The panel slides out from below the toggle, also fixed.
+*/
+
+.side-menu {
+  /* anchor for the fixed children */
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+}
+
+.side-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 44px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  list-style: none; /* hide default disclosure marker */
+  color: var(--accent);
+  font-size: 1.2rem;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+/* Remove default disclosure triangle in all browsers */
+.side-menu-toggle::-webkit-details-marker { display: none; }
+.side-menu-toggle::marker { display: none; }
+
+.side-menu-toggle:hover { background: var(--bg-panel2); }
+
+.side-menu-icon { pointer-events: none; }
+
+.side-menu-panel {
+  position: fixed;
+  left: 36px;
+  top: 10px;
+  width: 270px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 0 4px 4px 0;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+  z-index: 199;
+}
+
+.side-menu-section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin: 0.25rem 0 0.1rem;
+}
+
+.side-menu-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.65rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-head);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.side-menu-btn:hover { background: var(--bg-panel2); border-color: var(--accent-dim); }
+
+.side-menu-btn-danger { color: var(--red); border-color: var(--danger); }
+.side-menu-btn-danger:hover { background: rgba(154, 48, 32, 0.15); border-color: var(--red); }
+
+.side-menu-hint {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0.1rem 0 0;
+  line-height: 1.4;
+}
+
+.side-menu-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.4rem 0;
+}
+
+/* ── Save slot list ──────────────────────────────────────────────────────── */
+
+.slot-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  min-height: 42px;
+  background: var(--bg);
+}
+
+.slot-row:last-child { border-bottom: none; }
+
+.slot-row:hover { background: var(--bg-panel2); }
+
+.slot-number {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  min-width: 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.slot-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 4px;
+}
+
+.slot-label {
+  font-size: 0.78rem;
+  color: var(--text-head);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slot-date {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.slot-empty {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.slot-btn {
+  padding: 2px 5px;
+  font-size: 0.68rem;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-panel);
+  color: var(--text-head);
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.slot-btn:hover:not(:disabled) { background: var(--bg-panel2); }
+
+.slot-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.slot-btn-save { border-color: var(--accent-dim); color: var(--accent); }
+.slot-btn-save:hover:not(:disabled) { background: rgba(200, 146, 58, 0.15); }
+
+.slot-btn-del { color: var(--red); border-color: var(--danger); }
+.slot-btn-del:hover:not(:disabled) { background: rgba(154, 48, 32, 0.15); }
+
 /* ── Overlay screens (game over / victory) ───────────────────────────────── */
 
 .overlay-screen {

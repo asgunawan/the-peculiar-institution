@@ -1,6 +1,8 @@
-# The Peculiar Institution - MVP
+# The Peculiar Institution
 
-A historically grounded, text-based plantation economy simulation set in the 1780-1793 tobacco era.
+**Current version: 0.1 — MVP complete.**
+The base tobacco farming loop (plant → tend → harvest → cure → sell, soil pressure, worker upkeep, debt foreclosure) is fully playable.
+See `concept.txt` for the full design vision and feature roadmap toward 1.0.
 
 ## Quick Start
 

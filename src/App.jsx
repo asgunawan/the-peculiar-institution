@@ -12,6 +12,7 @@ import {
 import { resolveSeason } from "./gameLogic/seasonEngine.js";
 import { downloadLog, getLog } from "./gameLogic/runLogger.js";
 import { useGameSession } from "./hooks/useGameSession.js";
+import { useSaveSlots } from "./hooks/useSaveSlots.js";
 import { useToastNotifications } from "./hooks/useToastNotifications.js";
 import { useMarketActions } from "./hooks/useMarketActions.js";
 import { useSeasonAdvance } from "./hooks/useSeasonAdvance.js";
@@ -22,13 +23,15 @@ import ResourcePanel from "./components/ResourcePanel.jsx";
 import SeasonOutlookPanel from "./components/SeasonOutlookPanel.jsx";
 import MarketPanel from "./components/MarketPanel.jsx";
 import EventLog from "./components/EventLog.jsx";
+import SideMenu from "./components/SideMenu.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import "./App.css";
 
 const SAVE_KEY = "the-peculiar-institution-save-v1";
 
 export default function App() {
-  const { state, setState, currentPrice, setCurrentPrice, resetGame, handleTogglePlotRest } = useGameSession(SAVE_KEY);
+  const { state, setState, currentPrice, setCurrentPrice, resetGame, handleTogglePlotRest, exportSave, importSave, applyGameData } = useGameSession(SAVE_KEY);
+  const { slotMetas, saveToSlot, loadFromSlot, deleteSlot } = useSaveSlots({ state, currentPrice, onApplyGameData: applyGameData });
   const { toasts, addToast } = useToastNotifications();
   const [overlayDismissed, setOverlayDismissed] = useState(false);
 
@@ -231,6 +234,19 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className="app">
+        <SideMenu
+          slotMetas={slotMetas}
+          onSaveToSlot={saveToSlot}
+          onLoadFromSlot={loadFromSlot}
+          onDeleteSlot={deleteSlot}
+          onExportSave={exportSave}
+          onImportSave={importSave}
+          onNewGame={() => {
+            if (window.confirm("Start a new game? All current progress will be lost.")) {
+              handleNewGame();
+            }
+          }}
+        />
         <GameHeader year={state.year} season={season} money={state.money} />
         <main className="game-grid">
           <div className="col-left">
@@ -290,16 +306,6 @@ export default function App() {
           )}
           <button className="btn btn-export" onClick={downloadLog}>
             Export Run Log
-          </button>
-          <button
-            className="btn btn-reset"
-            onClick={() => {
-              if (window.confirm("Reset and start a new game? All progress will be lost.")) {
-                handleNewGame();
-              }
-            }}
-          >
-            Reset Game
           </button>
         </footer>
         <div className="toast-overlay" aria-live="polite" aria-atomic="false">
