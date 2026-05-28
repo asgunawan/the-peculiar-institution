@@ -73,6 +73,20 @@ Do not implement from assumption — ask for sources.
 
 When changing `src/gameLogic/constants.js`, read `docs/history.md` first and update it if new research changes a historical range.
 
+## Analyzing run logs
+
+Run logs are JSON arrays exported from the browser (`window.downloadRunLog()`).
+**Do not read the raw JSON file directly** — it is typically 5000+ lines.
+Instead, run the repo analysis script and read its output:
+
+```
+python scripts/analyze_run.py <path-to-log.json>
+```
+
+The script prints: run summary, economy timeline, workforce/land growth, soil health trend,
+assignment patterns, production analysis, and key observations with automatic flags.
+After reading the script output, ask the user for their own thoughts before proposing changes.
+
 ## Out of scope (MVP)
 Cotton chain, cotton gin mechanics, named workers, research/adoption tree,
 historical random events, overseer system, slave auction market, guano imports, sound.
