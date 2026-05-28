@@ -1,2 +1,2 @@
 // Compatibility shim during TS migration.
-export * from "./logUtils.ts";
+export * from "./saveSlotUtils.ts";
