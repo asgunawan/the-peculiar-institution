@@ -10,11 +10,11 @@ import {
 } from "./gameLogic/constants.js";
 import { resolveSeason } from "./gameLogic/seasonEngine.js";
 import { downloadLog, getLog } from "./gameLogic/runLogger.js";
-import { useGameSession } from "./hooks/useGameSession.js";
-import { useSaveSlots } from "./hooks/useSaveSlots.js";
-import { useToastNotifications } from "./hooks/useToastNotifications.js";
-import { useMarketActions } from "./hooks/useMarketActions.js";
-import { useSeasonAdvance } from "./hooks/useSeasonAdvance.js";
+import { useGameSession } from "./hooks/useGameSession";
+import { useSaveSlots } from "./hooks/useSaveSlots";
+import { useToastNotifications } from "./hooks/useToastNotifications";
+import { useMarketActions } from "./hooks/useMarketActions";
+import { useSeasonAdvance } from "./hooks/useSeasonAdvance";
 import GameHeader from "./components/GameHeader";
 import WorkforcePanel from "./components/WorkforcePanel";
 import LandPanel from "./components/LandPanel";
