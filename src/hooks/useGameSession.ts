@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createInitialState } from "../gameLogic/initialState";
 import { getSellPrice } from "../gameLogic/seasonEngine";
 import { normalizeSavedState } from "../gameLogic/saveNormalizer";
-import { clearLog } from "../gameLogic/runLogger";
+import { clearLog, logInitialState } from "../gameLogic/runLogger";
 import type { GameState, SavePayload } from "../gameLogic/types";
 
 function hasObjectShape(value: unknown): value is Record<string, unknown> {
@@ -45,6 +45,17 @@ export function useGameSession(saveKey: string) {
   const [state, setState] = useState<GameState>(seed.state);
   const [currentPrice, setCurrentPrice] = useState<number>(seed.currentPrice);
 
+  // Log the initial state once per session if no run log exists yet.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const existing = window.localStorage.getItem("tpi_run_log");
+      if (!existing || existing === "[]") {
+        logInitialState(seed.state);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     window.localStorage.setItem(saveKey, JSON.stringify({ state, currentPrice }));
   }, [saveKey, state, currentPrice]);
@@ -52,6 +63,7 @@ export function useGameSession(saveKey: string) {
   const resetGame = useCallback(() => {
     clearLog();
     const fresh = createInitialState();
+    logInitialState(fresh);
     setState(fresh);
     setCurrentPrice(getSellPrice(fresh.year));
   }, []);

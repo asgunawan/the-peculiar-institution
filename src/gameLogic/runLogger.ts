@@ -52,6 +52,33 @@ function snapshot(s: GameState): Snapshot {
   };
 }
 
+export function logInitialState(state: GameState): void {
+  // Insert the starting snapshot at position 0 (replacing any stale entry).
+  // seq -1 distinguishes it from real season advances in the analysis script.
+  const entry = {
+    seq: -1,
+    year: state.year,
+    season: ["Spring", "Summer", "Fall", "Winter"][state.seasonIndex] as SeasonName,
+    label: "START",
+    start: snapshot(state),
+  };
+
+  // Replace any existing start entry or prepend.
+  if (log.length > 0 && (log[0] as { seq: number }).seq === -1) {
+    log[0] = entry as unknown as RunLogEntry;
+  } else {
+    log = [entry as unknown as RunLogEntry, ...log];
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(RUN_LOG_KEY, JSON.stringify(log));
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export function logSeason(before: GameState, after: GameState): void {
   const entry: RunLogEntry = {
     seq: log.length,
