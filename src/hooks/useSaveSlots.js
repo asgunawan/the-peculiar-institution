@@ -1,2 +1,2 @@
 // Compatibility shim during TS migration.
-export * from "./useGameSession.ts";
+export * from "./useSaveSlots.ts";
