@@ -40,5 +40,8 @@ export function normalizeSavedState(
     logCounter: nextId,
     debtSeasons: savedState.debtSeasons ?? 0,
     maintenanceTarget: savedState.maintenanceTarget ?? 0,
+    pendingFlavorText: savedState.pendingFlavorText ?? null,
+    seenMilestones: Array.isArray(savedState.seenMilestones) ? (savedState.seenMilestones as string[]) : [],
+    priceModifier: typeof savedState.priceModifier === "number" ? savedState.priceModifier : 1.0,
   } as GameState;
 }

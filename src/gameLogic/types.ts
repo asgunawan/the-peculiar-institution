@@ -59,6 +59,9 @@ export interface GameState {
   maintenanceTarget: number;
   gameOver: boolean;
   victory: boolean;
+  pendingFlavorText: string | null;
+  seenMilestones: string[];
+  priceModifier: number;
 }
 
 export interface SavePayload {

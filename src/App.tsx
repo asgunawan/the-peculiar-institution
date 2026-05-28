@@ -72,6 +72,10 @@ export default function App() {
     resetGame();
   }
 
+  function handleDismissFlavorText() {
+    setState((prev) => ({ ...prev, pendingFlavorText: null }));
+  }
+
   const { handleAdvanceSeason } = useSeasonAdvance({ state, setState, setCurrentPrice, addToast });
   const {
     handleAssignmentChange,
@@ -102,7 +106,7 @@ export default function App() {
   const totalAssigned = activeTasks.reduce((sum, t) => sum + (state.assignments[t] || 0), 0);
   const isOverAssigned = totalAssigned > totalWorkers;
   const unassignedWorkers = Math.max(0, totalWorkers - totalAssigned);
-  const nextStatePreview = resolveSeason(state);
+  const nextStatePreview = resolveSeason(state, false);
   const nextSeasonName = SEASONS[nextStatePreview.seasonIndex];
 
   const projectedLeafAfterAdvance = nextStatePreview.resources.rawTobacco + nextStatePreview.resources.curedTobacco;
@@ -287,6 +291,14 @@ export default function App() {
           }}
         />
         <GameHeader year={state.year} season={season} money={state.money} />
+        {state.pendingFlavorText && (
+          <div className="flavor-banner">
+            <p className="flavor-banner-text">{state.pendingFlavorText}</p>
+            <button className="flavor-banner-dismiss" onClick={handleDismissFlavorText} aria-label="Dismiss">
+              ×
+            </button>
+          </div>
+        )}
         <main className="game-grid">
           <div className="col-left">
             <WorkforcePanel

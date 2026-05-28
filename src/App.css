@@ -55,9 +55,47 @@
 
 .money-value.money-low { color: var(--red); }
 
+/* Flavor text / milestone banner — shown between header and game grid */
+.flavor-banner {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--accent-dim);
+  padding: 0.55rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.flavor-banner-text {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.flavor-banner-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--accent-dim);
+  color: var(--text-dim);
+  border-radius: 3px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  margin-top: 1px;
+}
+
+.flavor-banner-dismiss:hover {
+  color: var(--text-head);
+  border-color: var(--accent);
+}
+
 /* Two-column game grid */
-.game-grid {
-  display: grid;
+.game-grid {  display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   padding: 1rem 0;

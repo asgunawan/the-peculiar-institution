@@ -15,6 +15,9 @@ import {
   HIREOUT_INCOME_PER_WORKER,
   DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
+  RANDOM_EVENTS,
+  FLAVOR_MILESTONES,
+  SOIL_THRESHOLDS,
 } from "./constants";
 import { pushLog as pushStructuredLog } from "./logUtils";
 import type { Assignments, GameState, LogEntry, Plot, SeasonName, TaskName } from "./types";
@@ -46,6 +49,71 @@ function createLogWriter(initialLog: LogEntry[], initialCounter: number) {
 
 function clonePlots(plots: Plot[]): Plot[] {
   return plots.map((p) => ({ ...p }));
+}
+
+// Applies one random event to the state after the main season logic runs.
+// Only one event fires per season. Events are tested in declaration order.
+// Called only during actual season advance, not during preview renders.
+function applyRandomEvent(state: GameState, season: SeasonName): GameState {
+  for (const event of RANDOM_EVENTS) {
+    if (!event.seasons.includes(season)) continue;
+    if (Math.random() > event.chance) continue;
+
+    let next = { ...state };
+    const plots = clonePlots(next.plots);
+
+    switch (event.id) {
+      case "tobacco-blight":
+        // Reduce yield modifier on tended plots by 35 pp (min 0.3).
+        plots.forEach((p) => {
+          if (p.state === "tended") {
+            p.yieldModifier = clamp(p.yieldModifier - 0.35, 0.3, 1.0);
+          }
+        });
+        next = { ...next, plots };
+        break;
+
+      case "drought":
+        // Reduce soil health on non-fallow plots by 12.
+        plots.forEach((p) => {
+          if (p.state !== "fallow") {
+            p.soilHealth = Math.max(0, p.soilHealth - 12);
+          }
+        });
+        next = { ...next, plots };
+        break;
+
+      case "early-frost":
+        // Destroy 45% of already-harvested raw tobacco.
+        next = {
+          ...next,
+          resources: {
+            ...next.resources,
+            rawTobacco: Math.floor(next.resources.rawTobacco * 0.55),
+          },
+        };
+        break;
+
+      case "price-crash":
+        next = { ...next, priceModifier: 0.6 };
+        break;
+
+      case "good-harvest":
+        // Boost yield modifier on tended plots by 15 pp (max 1.0).
+        plots.forEach((p) => {
+          if (p.state === "tended") {
+            p.yieldModifier = clamp(p.yieldModifier + 0.15, 0.3, 1.0);
+          }
+        });
+        next = { ...next, plots };
+        break;
+    }
+
+    const eventLog = pushStructuredLog(next.log, next.logCounter, event.logText);
+    return { ...next, log: eventLog.log, logCounter: eventLog.logCounter };
+  }
+
+  return state;
 }
 
 function resolveSpring(state: GameState): GameState {
@@ -172,7 +240,22 @@ function resolveFall(state: GameState): GameState {
   };
 
   const { log, logCounter } = writer.snapshot();
-  return { ...state, plots, resources, log, logCounter };
+  let result: GameState = { ...state, plots, resources, log, logCounter };
+
+  // First-time milestone: soil drops below the warning threshold after harvest.
+  if (
+    result.pendingFlavorText == null &&
+    !(result.seenMilestones ?? []).includes("soil-low") &&
+    plots.some((p) => p.soilHealth < SOIL_THRESHOLDS.WARN)
+  ) {
+    result = {
+      ...result,
+      pendingFlavorText: FLAVOR_MILESTONES["soil-low"],
+      seenMilestones: [...(result.seenMilestones ?? []), "soil-low"],
+    };
+  }
+
+  return result;
 }
 
 function resolveWinter(state: GameState): GameState {
@@ -230,7 +313,7 @@ function resolveWinter(state: GameState): GameState {
 
   const { log, logCounter } = writer.snapshot();
 
-  return {
+  let result: GameState = {
     ...state,
     money: moneyAfterUpkeep,
     plots,
@@ -238,27 +321,50 @@ function resolveWinter(state: GameState): GameState {
     log,
     logCounter,
   };
+
+  // First-time milestone: raw leaf rotted for the first time.
+  if (
+    rawRotted > 0 &&
+    result.pendingFlavorText == null &&
+    !(result.seenMilestones ?? []).includes("curing-shortfall")
+  ) {
+    result = {
+      ...result,
+      pendingFlavorText: FLAVOR_MILESTONES["curing-shortfall"],
+      seenMilestones: [...(result.seenMilestones ?? []), "curing-shortfall"],
+    };
+  }
+
+  return result;
 }
 
-export function resolveSeason(state: GameState): GameState {
+export function resolveSeason(state: GameState, applyEvents = true): GameState {
   const season = SEASONS[state.seasonIndex];
   let nextState: GameState;
 
+  // Reset per-season transient fields before resolving.
+  const freshState: GameState = { ...state, priceModifier: 1.0, pendingFlavorText: null };
+
   switch (season) {
     case "Spring":
-      nextState = resolveSpring(state);
+      nextState = resolveSpring(freshState);
       break;
     case "Summer":
-      nextState = resolveSummer(state);
+      nextState = resolveSummer(freshState);
       break;
     case "Fall":
-      nextState = resolveFall(state);
+      nextState = resolveFall(freshState);
       break;
     case "Winter":
-      nextState = resolveWinter(state);
+      nextState = resolveWinter(freshState);
       break;
     default:
-      nextState = { ...state };
+      nextState = { ...freshState };
+  }
+
+  // Apply one random event (only during actual season advance, not preview renders).
+  if (applyEvents) {
+    nextState = applyRandomEvent(nextState, season as SeasonName);
   }
 
   const maintenanceWorkers = state.assignments.maintenance || 0;
@@ -346,6 +452,12 @@ export function resolveSeason(state: GameState): GameState {
     runningTotal += preservedAssignments[k];
   });
 
+  // First-time milestone: player goes into debt for the first time.
+  const debtMilestone =
+    debtSeasons === 1 &&
+    nextState.pendingFlavorText == null &&
+    !(nextState.seenMilestones ?? []).includes("first-debt");
+
   return {
     ...nextState,
     seasonIndex: nextSeasonIndex,
@@ -354,6 +466,12 @@ export function resolveSeason(state: GameState): GameState {
     debtSeasons,
     gameOver: isBankrupt,
     victory: nextState.victory || nextYear >= COTTON_GIN_YEAR,
+    ...(debtMilestone
+      ? {
+          pendingFlavorText: FLAVOR_MILESTONES["first-debt"],
+          seenMilestones: [...(nextState.seenMilestones ?? []), "first-debt"],
+        }
+      : {}),
   };
 }
 

@@ -138,3 +138,71 @@ export const START_YEAR = 1780;
 
 // Year the cotton gin becomes available (victory/transition condition).
 export const COTTON_GIN_YEAR = 1793;
+
+// ── Random events ─────────────────────────────────────────────────────────
+// Events are checked once per season advance (not in preview mode).
+// Only one event fires per season; events are tested in declaration order.
+
+export interface RandomEvent {
+  id: string;
+  seasons: SeasonName[];
+  chance: number; // probability 0–1
+  label: string;
+  logText: string; // written to the event log when fired
+}
+
+export const RANDOM_EVENTS: RandomEvent[] = [
+  {
+    id: "tobacco-blight",
+    seasons: ["Summer"],
+    chance: 0.12,
+    label: "Tobacco Blight",
+    logText:
+      "EVENT — Tobacco Blight: A yellowing blight has spread through the rows this summer. Mosaic virus, black rot — there is no way to say. Tending efforts were partially undone and yield will be reduced. (Tobacco diseases were chronic in the Chesapeake. Mosaic virus, black shank, and root rot struck unpredictably; planters had no chemical remedies — only to pull diseased stalks and hope.)",
+  },
+  {
+    id: "drought",
+    seasons: ["Summer"],
+    chance: 0.10,
+    label: "Drought",
+    logText:
+      "EVENT — Drought: Weeks of punishing heat cracked the soil and wilted the young plants. The fields are stressed and the soil's condition has worsened. (The Chesapeake climate was volatile. Severe drought years struck in 1780, 1787, and 1791. Planters had no irrigation — they were entirely at the mercy of seasonal rainfall.)",
+  },
+  {
+    id: "early-frost",
+    seasons: ["Fall"],
+    chance: 0.12,
+    label: "Early Frost",
+    logText:
+      "EVENT — Early Frost: A hard frost arrived three weeks ahead of schedule, blackening the tobacco before it could fully ripen. A portion of the harvest is ruined. (An early autumn frost was among the most feared events in the tobacco calendar. Green, frost-damaged leaf was nearly unsaleable and fetched pennies on the pound — or nothing at all.)",
+  },
+  {
+    id: "price-crash",
+    seasons: ["Spring", "Summer", "Fall", "Winter"],
+    chance: 0.08,
+    label: "Market Price Crash",
+    logText:
+      "EVENT — Market Price Crash: Dispatches arrive from the merchant houses — tobacco prices have collapsed in British and Dutch markets. Overproduction and disrupted postwar trade have saturated buyers. Prices will recover, but not this season. (Virginia tobacco prices were notoriously volatile in the 1780s. The Revolutionary War's aftermath had disrupted the Atlantic trade for years; planters sold into a buyers' market at the worst moments.)",
+  },
+  {
+    id: "good-harvest",
+    seasons: ["Summer"],
+    chance: 0.12,
+    label: "Favorable Season",
+    logText:
+      "EVENT — Favorable Season: Mild rains and temperate weather have blessed the tobacco this summer. Growth is ahead of schedule and the leaf looks strong. (A 'favourable season' was the constant prayer of the Chesapeake planter. Washington and Jefferson kept detailed weather journals, noting that a single good season could rescue a plantation's finances.)",
+  },
+];
+
+// ── First-occurrence flavor text ───────────────────────────────────────────
+// Shown once in the header banner when a mechanic milestone is first triggered.
+// Keyed by milestone ID; checked against state.seenMilestones.
+
+export const FLAVOR_MILESTONES: Record<string, string> = {
+  "soil-low":
+    "The soil tells the story of Virginia's tobacco curse. By the 1780s, decades of continuous planting had exhausted the Chesapeake tidewater. Most planters simply abandoned worn-out land and moved west to fresh soil — a cycle that pushed the frontier steadily toward the Appalachians. Rotate fields into fallow or invest in off-season maintenance labor.",
+  "curing-shortfall":
+    "Tobacco curing was a science unto itself. Chesapeake planters air-cured or fire-cured their leaf in curing houses over weeks or months. Uncured raw leaf fermented and rotted quickly — what you could not cure, you lost entirely. A curing shortfall was a real economic disaster: leaf you grew, paid workers to harvest, and could never sell.",
+  "first-debt":
+    "Debt was the defining condition of the Virginia planter class. Most tobacco planters were chronically indebted to British merchant houses — the crop was pledged before it was grown, and interest compounded through generations. George Washington inherited debts and never fully escaped them. Thomas Jefferson died $107,000 in debt. Your situation is familiar.",
+};

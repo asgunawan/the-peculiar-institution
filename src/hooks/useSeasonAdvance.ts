@@ -54,7 +54,8 @@ export function useSeasonAdvance({ state, setState, setCurrentPrice, addToast }:
     }
 
     setState(next);
-    setCurrentPrice(getSellPrice(next.year));
+    const rawPrice = getSellPrice(next.year);
+    setCurrentPrice(Math.max(1, parseFloat((rawPrice * (next.priceModifier ?? 1.0)).toFixed(2))));
   }, [state, setState, setCurrentPrice, addToast]);
 
   return { handleAdvanceSeason };

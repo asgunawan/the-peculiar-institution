@@ -78,5 +78,12 @@ export function createInitialState(): GameState {
 
     gameOver: false,
     victory: false,
+
+    // Educational flavor text to display in the header banner (dismissed by player).
+    pendingFlavorText: null,
+    // Milestone IDs already shown — prevents the same note from repeating.
+    seenMilestones: [],
+    // Multiplier applied to the sell price after a price-crash event (resets to 1.0 each season).
+    priceModifier: 1.0,
   };
 }
