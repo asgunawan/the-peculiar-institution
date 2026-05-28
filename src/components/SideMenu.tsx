@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import type { ChangeEvent } from "react";
 import { formatSaveDate } from "../gameLogic/saveSlotUtils.js";
 import type { SlotMeta } from "../gameLogic/types";
 
@@ -91,7 +92,7 @@ export default function SideMenu({
     fileInputRef.current?.click();
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     onImportSave(file);
