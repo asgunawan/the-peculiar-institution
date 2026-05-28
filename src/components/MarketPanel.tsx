@@ -3,7 +3,7 @@ import {
   ENSLAVED_PURCHASE_COST,
   FREE_WORKER_WAGE_PER_SEASON,
   PLOT_COST,
-} from "../gameLogic/constants.js";
+} from "../gameLogic/constants";
 import type { SeasonName } from "../gameLogic/types";
 
 const PLOT_TIMING_HINT: Record<SeasonName, string> = {

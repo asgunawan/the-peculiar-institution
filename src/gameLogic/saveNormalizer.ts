@@ -1,5 +1,5 @@
 import type { GameState, Plot, Worker } from "./types";
-import { normalizeLog } from "./logUtils.js";
+import { normalizeLog } from "./logUtils";
 
 type PartialSavedState = Partial<GameState> & {
   workers?: Worker[] | number | unknown;

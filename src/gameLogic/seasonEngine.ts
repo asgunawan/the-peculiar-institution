@@ -15,8 +15,8 @@ import {
   HIREOUT_INCOME_PER_WORKER,
   DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
-} from "./constants.js";
-import { pushLog as pushStructuredLog } from "./logUtils.js";
+} from "./constants";
+import { pushLog as pushStructuredLog } from "./logUtils";
 import type { Assignments, GameState, LogEntry, Plot, SeasonName, TaskName } from "./types";
 
 function getTobaccoPrice(year: number): number {

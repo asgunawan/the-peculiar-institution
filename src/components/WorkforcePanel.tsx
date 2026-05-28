@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { SEASON_TASKS, TASKS, WORKERS_PER_PLOT_FULL_TEND } from "../gameLogic/constants.js";
-import { getTaskHint, getTaskLabel, getTendingEfficiency, getYieldClass } from "../gameLogic/taskHints.js";
+import { SEASON_TASKS, TASKS, WORKERS_PER_PLOT_FULL_TEND } from "../gameLogic/constants";
+import { getTaskHint, getTaskLabel, getTendingEfficiency, getYieldClass } from "../gameLogic/taskHints";
 import type { Assignments, Plot, SeasonName, TaskName } from "../gameLogic/types";
 
 interface WorkforcePanelProps {

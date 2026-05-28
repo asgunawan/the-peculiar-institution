@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { CURING_RATIO, SEASONS, SEASON_TASKS } from "../gameLogic/constants.js";
-import { getSellPrice, resolveSeason } from "../gameLogic/seasonEngine.js";
-import { logSeason } from "../gameLogic/runLogger.js";
+import { CURING_RATIO, SEASONS, SEASON_TASKS } from "../gameLogic/constants";
+import { getSellPrice, resolveSeason } from "../gameLogic/seasonEngine";
+import { logSeason } from "../gameLogic/runLogger";
 import type { GameState } from "../gameLogic/types";
 
 type ToastFn = (text: string, color?: string, durationMs?: number) => void;

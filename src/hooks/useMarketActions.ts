@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { ENSLAVED_PURCHASE_COST, FIELD_NAMES, FREE_WORKER_WAGE_PER_SEASON, PLOT_COST } from "../gameLogic/constants.js";
-import { pushLog } from "../gameLogic/logUtils.js";
+import { ENSLAVED_PURCHASE_COST, FIELD_NAMES, FREE_WORKER_WAGE_PER_SEASON, PLOT_COST } from "../gameLogic/constants";
+import { pushLog } from "../gameLogic/logUtils";
 import type { Assignments, GameState } from "../gameLogic/types";
 
 type ToastFn = (text: string, color?: string, durationMs?: number) => void;

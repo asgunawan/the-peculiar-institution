@@ -1,4 +1,4 @@
-import { getLogEntryText } from "../gameLogic/logUtils.js";
+import { getLogEntryText } from "../gameLogic/logUtils";
 import type { LogEntry } from "../gameLogic/types";
 
 interface EventLogProps {

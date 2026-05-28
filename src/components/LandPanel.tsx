@@ -1,4 +1,4 @@
-import { FALLOW_RECOVERY_CAP, FALLOW_RECOVERY_PER_SEASON, SOIL_THRESHOLDS } from "../gameLogic/constants.js";
+import { FALLOW_RECOVERY_CAP, FALLOW_RECOVERY_PER_SEASON, SOIL_THRESHOLDS } from "../gameLogic/constants";
 import type { Plot } from "../gameLogic/types";
 
 interface LandPanelProps {

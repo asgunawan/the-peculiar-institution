@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { ChangeEvent } from "react";
-import { formatSaveDate } from "../gameLogic/saveSlotUtils.js";
+import { formatSaveDate } from "../gameLogic/saveSlotUtils";
 import type { SlotMeta } from "../gameLogic/types";
 
 interface SlotRowProps {

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { createInitialState } from "../gameLogic/initialState.js";
-import { getSellPrice } from "../gameLogic/seasonEngine.js";
-import { normalizeSavedState } from "../gameLogic/saveNormalizer.js";
-import { clearLog } from "../gameLogic/runLogger.js";
+import { createInitialState } from "../gameLogic/initialState";
+import { getSellPrice } from "../gameLogic/seasonEngine";
+import { normalizeSavedState } from "../gameLogic/saveNormalizer";
+import { clearLog } from "../gameLogic/runLogger";
 import type { GameState, SavePayload } from "../gameLogic/types";
 
 function hasObjectShape(value: unknown): value is Record<string, unknown> {

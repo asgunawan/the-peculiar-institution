@@ -7,9 +7,9 @@ import {
   ENSLAVED_UPKEEP_PER_SEASON,
   SEASON_TASKS,
   SOIL_RESTORE_PER_WORKER,
-} from "./gameLogic/constants.js";
-import { resolveSeason } from "./gameLogic/seasonEngine.js";
-import { downloadLog, getLog } from "./gameLogic/runLogger.js";
+} from "./gameLogic/constants";
+import { resolveSeason } from "./gameLogic/seasonEngine";
+import { downloadLog, getLog } from "./gameLogic/runLogger";
 import { useGameSession } from "./hooks/useGameSession";
 import { useSaveSlots } from "./hooks/useSaveSlots";
 import { useToastNotifications } from "./hooks/useToastNotifications";

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { SLOT_COUNT, slotKey, serializeSlot, parseSlotData, readSlotMeta } from "../gameLogic/saveSlotUtils.js";
+import { SLOT_COUNT, slotKey, serializeSlot, parseSlotData, readSlotMeta } from "../gameLogic/saveSlotUtils";
 import type { GameState, SlotMeta } from "../gameLogic/types";
 
 interface UseSaveSlotsOptions {

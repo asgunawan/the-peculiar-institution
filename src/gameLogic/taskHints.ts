@@ -5,7 +5,7 @@ import {
   HIREOUT_INCOME_PER_WORKER,
   SOIL_RESTORE_PER_WORKER,
   WORKERS_PER_PLOT_FULL_TEND,
-} from "./constants.js";
+} from "./constants";
 import type { Plot, SeasonName, TaskName } from "./types";
 
 const TASK_LABELS: Record<TaskName, string> = {
