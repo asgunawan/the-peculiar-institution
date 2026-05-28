@@ -195,14 +195,86 @@ export const RANDOM_EVENTS: RandomEvent[] = [
 ];
 
 // ── First-occurrence flavor text ───────────────────────────────────────────
-// Shown once in the header banner when a mechanic milestone is first triggered.
+// Shown once in the header subtitle when a milestone is first triggered.
 // Keyed by milestone ID; checked against state.seenMilestones.
+
+export const SEASON_HINTS: Record<string, string> = {
+  Spring: "Assign workers to planting.",
+  Summer: "Assign workers to tending the fields.",
+  Fall:   "Assign workers to harvesting.",
+  Winter: "Split workers between curing and maintenance.",
+};
 
 export const FLAVOR_MILESTONES: Record<string, string> = {
   "soil-low":
-    "The soil tells the story of Virginia's tobacco curse. By the 1780s, decades of continuous planting had exhausted the Chesapeake tidewater. Most planters simply abandoned worn-out land and moved west to fresh soil — a cycle that pushed the frontier steadily toward the Appalachians. Rotate fields into fallow or invest in off-season maintenance labor.",
+    "The soil tells the story of Virginia's tobacco curse. Decades of continuous planting exhausted the Chesapeake tidewater. Most planters simply abandoned worn-out land and moved west — a cycle that pushed the frontier steadily toward the Appalachians.",
   "curing-shortfall":
-    "Tobacco curing was a science unto itself. Chesapeake planters air-cured or fire-cured their leaf in curing houses over weeks or months. Uncured raw leaf fermented and rotted quickly — what you could not cure, you lost entirely. A curing shortfall was a real economic disaster: leaf you grew, paid workers to harvest, and could never sell.",
+    "Tobacco curing was a science unto itself. Chesapeake planters air-cured or fire-cured their leaf over weeks or months. Uncured raw leaf fermented and rotted quickly — what you could not cure, you lost entirely.",
   "first-debt":
-    "Debt was the defining condition of the Virginia planter class. Most tobacco planters were chronically indebted to British merchant houses — the crop was pledged before it was grown, and interest compounded through generations. George Washington inherited debts and never fully escaped them. Thomas Jefferson died $107,000 in debt. Your situation is familiar.",
+    "Debt was the defining condition of the Virginia planter class. The crop was pledged before it was grown, and interest compounded through generations. George Washington never escaped his debts. Thomas Jefferson died $107,000 in arrears.",
+
+  // Year-triggered historical notes — shown once when entering the new year's Spring.
+  "year-1780":
+    "Spring 1780 — Your plantation begins with debts owed to London merchant houses. The Revolutionary War closed Atlantic markets and prices have not recovered. Tobacco fetches barely 4¢ a pound. Keep your expenses lean.",
+  "year-1781":
+    "Spring 1781 — The war drags on in the South. British naval patrols still disrupt Atlantic shipping. Your tobacco sits in riverside warehouses, waiting for ships that may not come.",
+  "year-1782":
+    "Spring 1782 — Peace negotiations are underway in Paris. Your merchant contacts are cautious but hopeful. If Britain opens its ports again, tobacco prices could recover before the decade ends.",
+  "year-1783":
+    "Spring 1783 — The Treaty of Paris is signed. British markets will reopen — slowly. Your factor writes from London that prices should begin to recover. Hold your inventory if you can afford to.",
+  "year-1784":
+    "Spring 1784 — Atlantic trade is stirring back to life. Scottish tobacco merchants have returned to the Chesapeake. Prices are edging upward. The worst years may be behind you.",
+  "year-1785":
+    "Spring 1785 — Soil exhaustion is now a topic in every courthouse and tavern. Washington at Mount Vernon has turned largely to wheat. You are still growing tobacco.",
+  "year-1786":
+    "Spring 1786 — A financial depression grips the new republic. Debtors in Massachusetts are in open revolt — Shays' Rebellion. Creditor pressure is everywhere. Your mortgage is no different.",
+  "year-1787":
+    "Spring 1787 — The Constitutional Convention meets in Philadelphia this summer. The document being written there will protect the institution your plantation depends on for another seventy years.",
+  "year-1788":
+    "Spring 1788 — Virginia ratifies the new Constitution after heated debate. Patrick Henry feared federal power would eventually threaten slavery. He was right, though it would take seventy years to prove him so.",
+  "year-1789":
+    "Spring 1789 — George Washington takes office as the first President. He is a fellow Virginia tobacco planter, and his plantation at Mount Vernon faces the same soil exhaustion and debt pressure you do.",
+  "year-1790":
+    "Spring 1790 — Congress passes the first Fugitive Slave Act, requiring the return of escaped enslaved people across state lines. The entire weight of the republic now stands behind the institution your plantation depends upon.",
+  "year-1791":
+    "Spring 1791 — An uprising of enslaved people in the French colony of Saint-Domingue has entered its third month. Planters in Virginia read the dispatches with dread. It will produce the first Black republic in the Americas.",
+  "year-1792":
+    "Spring 1792 — A Yale graduate named Eli Whitney has arrived in Georgia as a tutor. He has heard of the difficulties separating cotton fiber from seed, and is said to be investigating a mechanical solution.",
 };
+
+// ── Event header summaries ──────────────────────────────────────────────────
+// Short 1-line text shown in the header subtitle when a random event fires.
+// The full historical note still goes to the event log.
+export const EVENT_HEADER_TEXT: Record<string, string> = {
+  "tobacco-blight": "EVENT — A tobacco blight has spread through the rows this summer. Tending gains are partially undone.",
+  "drought":        "EVENT — Weeks of punishing heat cracked the soil and stressed the plants. Soil condition has worsened.",
+  "early-frost":    "EVENT — An early frost arrived before the crop could fully ripen. A portion of the harvest is ruined.",
+  "price-crash":    "EVENT — Dispatches from the merchant houses: tobacco prices have collapsed. Prices will recover, but not this season.",
+  "good-harvest":   "EVENT — Mild rains and temperate weather blessed the tobacco this summer. Yield is ahead of expectations.",
+};
+
+// ── Rotating flavor pool ────────────────────────────────────────────────────
+// Shown in the header subtitle once all first-occurrence milestones have fired.
+// Rotates by (year * 4 + seasonIndex) so it changes every season but is deterministic.
+export const FLAVOR_POOL: string[] = [
+  "Tobacco was currency in colonial Virginia — rents, fees, and debts were all denominated in pounds of leaf.",
+  "A hogshead of tobacco weighed 500–1,000 lbs and was rolled by enslaved workers miles to river landing docks along specially built 'rolling roads.'",
+  "George Washington grew tobacco at Mount Vernon until 1766, then switched to wheat. He called tobacco 'an irksome and unprofitable crop' that left his fields 'much worn and exhausted.'",
+  "Virginia planters rarely sold their crop directly — they shipped on consignment to British merchant houses in London and Glasgow, who sold it and credited the proceeds against ever-growing lines of credit.",
+  "The tobacco worm — Manduca sexta — was the planter's constant enemy. Enslaved workers were set to pick the large green caterpillars from plants by hand, one by one, row by row.",
+  "Tobacco depletes nitrogen from the soil faster than almost any other crop. Chesapeake planters had no scientific explanation — they called worn-out land 'tired' and moved on.",
+  "The standard Chesapeake tobacco cycle: plant seedbeds in Winter, transplant in Spring, top the flower bud in Summer to push energy to the leaves, harvest in Fall, cure over Winter.",
+  "Fire-curing involved hanging leaf in a barn and burning hardwood on the floor below for weeks. The resulting tobacco was dense and rich, prized for chewing and snuff.",
+  "Gang labor — driving groups of workers in unison under close supervision — produced roughly 39% more output than individual task assignment, according to economists who study the period.",
+  "Planters hired out surplus enslaved workers to neighbors, blacksmiths, millers, and ferry operators. The wages went entirely to the planter. The workers received nothing.",
+  "The Chesapeake was shaped by rivers. Tobacco could only be grown profitably close to water — the James, York, Rappahannock, and Potomac — because rolling hogsheads to distant ports was prohibitively expensive.",
+  "Thomas Jefferson kept meticulous farm accounts at Monticello and knew tobacco was destroying his soil. He was over $100,000 in debt when he died — a debt his estate could never repay.",
+  "The enslaved population of Virginia grew from 210,000 in 1780 to 490,000 by 1860. Most of that growth was through natural increase — and through the domestic slave trade moving people to new cotton territory.",
+  "Tobacco cultivation required roughly 1,700 hours of labor per acre per year. A four-worker plantation of eight acres required approximately 13,600 hours of labor annually — almost all of it compelled.",
+  "An enslaved worker assigned as a 'driver' set the pace for gang labor, under pressure from the overseer above and resentment from fellow workers below. The role offered small privileges at a steep moral cost.",
+  "The 'task system' — common in rice cultivation and some tobacco regions — assigned individual daily quotas. Workers who finished early could tend small personal plots. Planters found it harder to drive output than gang labor.",
+  "Tobacco planters were perpetually in debt to British merchants, pledging their next harvest before it was grown. The system was designed to keep planters dependent, and it worked for over a century.",
+  "Resistance was constant and largely invisible. Feigned illness, broken tools, slowed work, and small deliberate errors were the daily texture of life on a plantation — invisible in the ledger but everywhere in the fields.",
+  "By 1790, Virginia had more enslaved people than any other state. The tobacco economy that produced this had also produced the men who wrote the Declaration of Independence.",
+  "The cotton gin would arrive in 1793 — but on the Chesapeake, tobacco remained the crop that defined everything: the soil, the debt, the labor, and the slow exhaustion of the land.",
+];

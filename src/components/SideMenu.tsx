@@ -102,7 +102,7 @@ export default function SideMenu({
   return (
     <details className="side-menu">
       <summary className="side-menu-toggle" title="Menu">
-        <span className="side-menu-icon">☰</span>
+        <span className="side-menu-icon">💾</span>
       </summary>
 
       <nav className="side-menu-panel">

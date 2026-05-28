@@ -18,6 +18,7 @@ import {
   RANDOM_EVENTS,
   FLAVOR_MILESTONES,
   SOIL_THRESHOLDS,
+  EVENT_HEADER_TEXT,
 } from "./constants";
 import { pushLog as pushStructuredLog } from "./logUtils";
 import type { Assignments, GameState, LogEntry, Plot, SeasonName, TaskName } from "./types";
@@ -110,7 +111,12 @@ function applyRandomEvent(state: GameState, season: SeasonName): GameState {
     }
 
     const eventLog = pushStructuredLog(next.log, next.logCounter, event.logText);
-    return { ...next, log: eventLog.log, logCounter: eventLog.logCounter };
+    return {
+      ...next,
+      log: eventLog.log,
+      logCounter: eventLog.logCounter,
+      pendingFlavorText: EVENT_HEADER_TEXT[event.id] ?? event.label,
+    };
   }
 
   return state;
@@ -458,6 +464,37 @@ export function resolveSeason(state: GameState, applyEvents = true): GameState {
     nextState.pendingFlavorText == null &&
     !(nextState.seenMilestones ?? []).includes("first-debt");
 
+  // Year-change milestone: show a historical note when entering a new year's Spring.
+  const yearMilestoneKey = `year-${nextYear}`;
+  const yearMilestone =
+    nextYear !== state.year &&
+    nextSeasonIndex === 0 &&
+    !debtMilestone &&
+    nextState.pendingFlavorText == null &&
+    !(nextState.seenMilestones ?? []).includes(yearMilestoneKey) &&
+    FLAVOR_MILESTONES[yearMilestoneKey] != null;
+
+  // Mark the next season hint as seen (so App.tsx can show it once then switch to FLAVOR_POOL).
+  const hintKey = `hint-${nextSeasonName}`;
+  const seenAfterHint = (nextState.seenMilestones ?? []).includes(hintKey)
+    ? (nextState.seenMilestones ?? [])
+    : [...(nextState.seenMilestones ?? []), hintKey];
+
+  let finalSeenMilestones: string[];
+  if (debtMilestone) {
+    finalSeenMilestones = seenAfterHint.includes("first-debt") ? seenAfterHint : [...seenAfterHint, "first-debt"];
+  } else if (yearMilestone) {
+    finalSeenMilestones = seenAfterHint.includes(yearMilestoneKey) ? seenAfterHint : [...seenAfterHint, yearMilestoneKey];
+  } else {
+    finalSeenMilestones = seenAfterHint;
+  }
+
+  const pendingFlavorResult = debtMilestone
+    ? FLAVOR_MILESTONES["first-debt"]
+    : yearMilestone
+    ? FLAVOR_MILESTONES[yearMilestoneKey]
+    : nextState.pendingFlavorText;
+
   return {
     ...nextState,
     seasonIndex: nextSeasonIndex,
@@ -466,12 +503,8 @@ export function resolveSeason(state: GameState, applyEvents = true): GameState {
     debtSeasons,
     gameOver: isBankrupt,
     victory: nextState.victory || nextYear >= COTTON_GIN_YEAR,
-    ...(debtMilestone
-      ? {
-          pendingFlavorText: FLAVOR_MILESTONES["first-debt"],
-          seenMilestones: [...(nextState.seenMilestones ?? []), "first-debt"],
-        }
-      : {}),
+    seenMilestones: finalSeenMilestones,
+    pendingFlavorText: pendingFlavorResult,
   };
 }
 

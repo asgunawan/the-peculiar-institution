@@ -7,6 +7,8 @@ import {
   ENSLAVED_UPKEEP_PER_SEASON,
   SEASON_TASKS,
   SOIL_RESTORE_PER_WORKER,
+  SEASON_HINTS,
+  FLAVOR_POOL,
 } from "./gameLogic/constants";
 import { resolveSeason } from "./gameLogic/seasonEngine";
 import { downloadLog, getLog } from "./gameLogic/runLogger";
@@ -225,6 +227,16 @@ export default function App() {
     }
   }
 
+  // ── Header subtitle logic ────────────────────────────────────────────────
+  // Priority: (1) pending flavor text (dismissable), (2) first-seen season hint, (3) rotating pool.
+  const hintKey = `hint-${season}`;
+  const subtitleIsDismissable = state.pendingFlavorText != null;
+  const headerSubtitle: string = state.pendingFlavorText
+    ? state.pendingFlavorText
+    : !(state.seenMilestones ?? []).includes(hintKey)
+    ? (SEASON_HINTS[season] ?? "")
+    : FLAVOR_POOL[(state.year * 4 + state.seasonIndex) % FLAVOR_POOL.length];
+
   if (state.gameOver && !overlayDismissed) {
     return (
       <div className="overlay-screen game-over">
@@ -290,15 +302,13 @@ export default function App() {
             }
           }}
         />
-        <GameHeader year={state.year} season={season} money={state.money} />
-        {state.pendingFlavorText && (
-          <div className="flavor-banner">
-            <p className="flavor-banner-text">{state.pendingFlavorText}</p>
-            <button className="flavor-banner-dismiss" onClick={handleDismissFlavorText} aria-label="Dismiss">
-              ×
-            </button>
-          </div>
-        )}
+        <GameHeader
+          year={state.year}
+          season={season}
+          money={state.money}
+          subtitle={headerSubtitle}
+          onDismissSubtitle={subtitleIsDismissable ? handleDismissFlavorText : undefined}
+        />
         <main className="game-grid">
           <div className="col-left">
             <WorkforcePanel
