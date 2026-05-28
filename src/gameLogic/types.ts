@@ -47,7 +47,7 @@ export interface LogEntry {
 export interface GameState {
   year: number;
   seasonIndex: number;
-  readonly season: SeasonName;
+  readonly season?: SeasonName;
   money: number;
   workers: Worker[];
   plots: Plot[];
