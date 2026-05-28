@@ -12,6 +12,10 @@ import json
 import sys
 from pathlib import Path
 
+# Ensure UTF-8 output on Windows consoles that default to cp1252
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,7 +79,12 @@ def print_economy_timeline(log: list[dict]):
         delta = m_end - m_start
         debt = entry["after"]["debtSeasons"]
         debt_str = f"⚠ {debt}" if debt > 0 else ""
-        flag = " ◄ BOUGHT" if entry["after"]["workers"] > entry["before"]["workers"] or len(entry["after"]["plots"]) > len(entry["before"]["plots"]) else ""
+        bought = []
+        if entry["after"]["workers"] > entry["before"]["workers"]:
+            bought.append(f"+{entry['after']['workers'] - entry['before']['workers']}w")
+        if len(entry["after"]["plots"]) > len(entry["before"]["plots"]):
+            bought.append(f"+{len(entry['after']['plots']) - len(entry['before']['plots'])}p")
+        flag = f" ◄ {','.join(bought)}" if bought else ""
         print(f"  {label:<18} ${m_start:>7.2f} ${m_end:>7.2f} ${delta:>+7.2f}  {debt_str:<6}{flag}")
 
 
@@ -112,7 +121,7 @@ def print_soil_health(log: list[dict]):
         min_h = min(healths)
         label = f"{entry['year']} {entry['season']}"
         warn = " ⚠" if min_h < 30 else (" ·" if min_h < 60 else "  ")
-        print(f"  {label:<18} {len(plots):>5}  {avg_h:>5.1f}  {min_h:>5.0f}  {bar(avg_h)}{warn}")
+        print(f"  {label:<18} {len(plots):>5}  {avg_h:>5.1f}  {round(min_h):>5}  {bar(avg_h)}{warn}")
 
 
 def print_assignment_patterns(log: list[dict]):
