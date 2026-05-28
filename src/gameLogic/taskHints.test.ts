@@ -1,10 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { WORKERS_PER_PLOT_FULL_TEND } from "./constants.js";
-import { getTendingEfficiency } from "./taskHints.js";
+import { WORKERS_PER_PLOT_FULL_TEND } from "./constants";
+import { getTendingEfficiency } from "./taskHints";
+import type { Plot } from "./types";
 
-const planted = (id) => ({ id, state: "planted", soilHealth: 100, resting: false });
-const fallow  = (id) => ({ id, state: "fallow",  soilHealth: 75,  resting: false });
-const resting = (id) => ({ id, state: "fallow",  soilHealth: 75,  resting: true  });
+const createPlot = (id: number, state: Plot["state"], resting: boolean, soilHealth: number): Plot => ({
+  id,
+  name: `Plot ${id}`,
+  soilHealth,
+  cropType: "tobacco",
+  state,
+  yieldModifier: 1,
+  resting,
+});
+
+const planted = (id: number): Plot => createPlot(id, "planted", false, 100);
+const fallow = (id: number): Plot => createPlot(id, "fallow", false, 75);
+const resting = (id: number): Plot => createPlot(id, "fallow", true, 75);
 
 describe("getTendingEfficiency", () => {
   it("returns 0 when there are no plots", () => {

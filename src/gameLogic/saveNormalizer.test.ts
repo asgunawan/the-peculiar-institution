@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSavedState } from "./saveNormalizer.js";
-import { createInitialState } from "./initialState.js";
+import { normalizeSavedState } from "./saveNormalizer";
+import { createInitialState } from "./initialState";
+import type { GameState } from "./types";
 
 function makeSaved(overrides = {}) {
   const base = createInitialState();
@@ -87,7 +88,7 @@ describe("normalizeSavedState — plots migration", () => {
 describe("normalizeSavedState — missing fields", () => {
   it("defaults missing debtSeasons to 0", () => {
     const fresh = createInitialState();
-    const saved = makeSaved();
+    const saved: Partial<GameState> = makeSaved();
     delete saved.debtSeasons;
     const result = normalizeSavedState(saved, fresh);
 
@@ -103,7 +104,7 @@ describe("normalizeSavedState — missing fields", () => {
 
   it("defaults missing maintenanceTarget to 0", () => {
     const fresh = createInitialState();
-    const saved = makeSaved();
+    const saved: Partial<GameState> = makeSaved();
     delete saved.maintenanceTarget;
     const result = normalizeSavedState(saved, fresh);
 

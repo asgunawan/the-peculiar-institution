@@ -5,9 +5,10 @@ import {
   serializeSlot,
   parseSlotData,
   readSlotMeta,
-} from "./saveSlotUtils.js";
-import { createInitialState } from "./initialState.js";
-import { normalizeSavedState } from "./saveNormalizer.js";
+} from "./saveSlotUtils";
+import { createInitialState } from "./initialState";
+import { normalizeSavedState } from "./saveNormalizer";
+import type { GameState } from "./types";
 
 // ── serializeSlot ────────────────────────────────────────────────────────────
 
@@ -33,7 +34,8 @@ describe("serializeSlot", () => {
 
   it("savedAt is a valid ISO 8601 string", () => {
     const result = serializeSlot(createInitialState(), 300);
-    expect(() => new Date(result.savedAt).toISOString()).not.toThrow();
+    expect(result.savedAt).toBeDefined();
+    expect(() => new Date(result.savedAt as string).toISOString()).not.toThrow();
     expect(result.savedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
@@ -77,13 +79,15 @@ describe("parseSlotData", () => {
     const raw = JSON.stringify(serializeSlot(createInitialState(), 350));
     const result = parseSlotData(raw);
     expect(result).not.toBeNull();
+    if (!result) throw new Error("Expected parsed slot payload");
     expect(result.currentPrice).toBe(350);
   });
 
   it("preserves extra fields beyond the minimum schema", () => {
     const data = { ...serializeSlot(createInitialState(), 300), customField: "hello" };
     const result = parseSlotData(JSON.stringify(data));
-    expect(result.customField).toBe("hello");
+    if (!result) throw new Error("Expected parsed slot payload");
+    expect((result as unknown as Record<string, unknown>).customField).toBe("hello");
   });
 });
 
@@ -100,6 +104,7 @@ describe("readSlotMeta", () => {
     const state = { ...createInitialState(), year: 1788, seasonIndex: 1 };
     const meta = readSlotMeta(JSON.stringify(serializeSlot(state, 280)));
     expect(meta).not.toBeNull();
+    if (!meta) throw new Error("Expected slot metadata");
     expect(meta.year).toBe(1788);
     expect(meta.seasonIndex).toBe(1);
     expect(meta.label).toBe("1788 \u2013 Summer");
@@ -127,6 +132,7 @@ describe("round-trip: serialize \u2192 parse \u2192 normalize", () => {
     const original = { ...createInitialState(), year: 1784, money: 999.99 };
     const raw = JSON.stringify(serializeSlot(original, 320));
     const parsed = parseSlotData(raw);
+    if (!parsed) throw new Error("Expected parsed slot payload");
     const restored = normalizeSavedState(parsed.state, createInitialState());
     expect(restored.year).toBe(1784);
     expect(restored.money).toBe(999.99);
@@ -134,7 +140,7 @@ describe("round-trip: serialize \u2192 parse \u2192 normalize", () => {
 
   it("normalizer backfills missing fields from an older save format", () => {
     const state = createInitialState();
-    const partial = { ...state };
+    const partial: Partial<GameState> = { ...state };
     delete partial.debtSeasons;
     const raw = JSON.stringify({
       state: partial,
@@ -143,6 +149,7 @@ describe("round-trip: serialize \u2192 parse \u2192 normalize", () => {
       label: "1780 \u2013 Spring",
     });
     const parsed = parseSlotData(raw);
+    if (!parsed) throw new Error("Expected parsed slot payload");
     const restored = normalizeSavedState(parsed.state, createInitialState());
     expect(typeof restored.debtSeasons).toBe("number");
   });
@@ -158,6 +165,7 @@ describe("round-trip: serialize \u2192 parse \u2192 normalize", () => {
     const richState = { ...state, plots: [...state.plots, ...extraPlots] };
     const raw = JSON.stringify(serializeSlot(richState, 300));
     const parsed = parseSlotData(raw);
+    if (!parsed) throw new Error("Expected parsed slot payload");
     const restored = normalizeSavedState(parsed.state, createInitialState());
     expect(restored.plots).toHaveLength(10);
   });

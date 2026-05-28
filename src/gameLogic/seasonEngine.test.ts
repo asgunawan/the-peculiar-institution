@@ -6,11 +6,17 @@ import {
   FALLOW_RECOVERY_PER_SEASON,
   HIREOUT_INCOME_PER_WORKER,
   SOIL_RESTORE_PER_WORKER,
-} from "./constants.js";
-import { createInitialState } from "./initialState.js";
-import { resolveSeason } from "./seasonEngine.js";
+} from "./constants";
+import { createInitialState } from "./initialState";
+import { resolveSeason } from "./seasonEngine";
+import type { GameState } from "./types";
 
-function createState(overrides = {}) {
+function createState(
+  overrides: Omit<Partial<GameState>, "resources" | "assignments"> & {
+    resources?: Partial<GameState["resources"]>;
+    assignments?: Partial<GameState["assignments"]>;
+  } = {}
+): GameState {
   const base = createInitialState();
   return {
     ...base,
@@ -264,9 +270,11 @@ describe("resolveSeason", () => {
     });
 
     const next = resolveSeason(state);
+    const restingPlot = next.plots.find((p) => p.id === 1);
+    const activePlot = next.plots.find((p) => p.id === 2);
 
-    expect(next.plots.find((p) => p.id === 1).state).toBe("fallow");  // resting — skipped
-    expect(next.plots.find((p) => p.id === 2).state).toBe("planted"); // active — planted
+    expect(restingPlot?.state).toBe("fallow"); // resting — skipped
+    expect(activePlot?.state).toBe("planted"); // active — planted
   });
 
   it("Spring plants only active fallow plots when all others are resting", () => {
