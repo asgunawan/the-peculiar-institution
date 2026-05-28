@@ -54,42 +54,54 @@ The UI includes a Season Outlook panel that previews:
 
 This is a read-only forecast aid; it does not mutate game state.
 
+## Save/Load UI
+
+- Save slots are available in a hamburger side menu pinned on the top-left edge.
+- The menu supports 10 slots with Save/Load/Delete per slot.
+- Export/Import JSON actions are available at the bottom of the same panel.
+
 ## Architecture
 
 ```text
 src/
   hooks/
-    useGameSession.js
-    useMarketActions.js
-    useSeasonAdvance.js
-    useToastNotifications.js
+    useGameSession.ts
+    useMarketActions.ts
+    useSaveSlots.ts
+    useSeasonAdvance.ts
+    useToastNotifications.ts
   gameLogic/
-    constants.js
-    initialState.js
-    logUtils.js
-    seasonEngine.js
-    seasonEngine.test.js
-    taskHints.js
+    constants.ts
+    initialState.ts
+    logUtils.ts
+    runLogger.ts
+    saveNormalizer.ts
+    saveSlotUtils.ts
+    seasonEngine.ts
+    seasonEngine.test.ts
+    taskHints.ts
   components/
-    ErrorBoundary.jsx
-    EventLog.jsx
-    GameHeader.jsx
-    LandPanel.jsx
-    MarketPanel.jsx
-    ResourcePanel.jsx
-    SeasonOutlookPanel.jsx
-    WorkforcePanel.jsx
-  App.jsx
+    ErrorBoundary.tsx
+    EventLog.tsx
+    GameHeader.tsx
+    LandPanel.tsx
+    MarketPanel.tsx
+    ResourcePanel.tsx
+    SeasonOutlookPanel.tsx
+    SideMenu.tsx
+    WorkforcePanel.tsx
+  App.tsx
+  main.tsx
 ```
 
 ## Canonical State Shape
 
-```js
+```ts
 {
   year: 1780,
   seasonIndex: 0, // 0=Spring 1=Summer 2=Fall 3=Winter
   money: 500,
-  workers: 4,
+  workers: [{ id: 1, type: "enslaved" }],
   plots: [{
     id: 1,
     name: "Home Field",
@@ -97,6 +109,7 @@ src/
     cropType: "tobacco",
     state: "fallow", // fallow | planted | tended
     yieldModifier: 1.0,
+    resting: false,
   }],
   resources: { rawTobacco: 0, curedTobacco: 0 },
   assignments: {

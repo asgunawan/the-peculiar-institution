@@ -511,8 +511,7 @@
   /* anchor for the fixed children */
   position: fixed;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 10px;
   z-index: 200;
 }
 

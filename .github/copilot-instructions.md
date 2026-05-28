@@ -11,7 +11,7 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
 - React 19 + Vite
 - No Redux, no external state library
 - No CSS frameworks — plain CSS variables in index.css / App.css
-- All game logic is pure JS in src/gameLogic/ (no React imports there)
+- All game logic is pure TypeScript in src/gameLogic/ (no React imports there)
 
 ## gameState shape (canonical reference)
 ```js
@@ -19,7 +19,10 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
   year: number,            // 1780+
   seasonIndex: number,     // 0=Spring 1=Summer 2=Fall 3=Winter
   money: number,           // dollars, 2dp
-  workers: number,         // total worker count (integer)
+  workers: [{
+    id: number,
+    type: "enslaved"|"free",
+  }],
   plots: [{
     id: number,
     name: string,
@@ -27,6 +30,7 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
     cropType: "tobacco",
     state: "fallow"|"planted"|"tended",
     yieldModifier: number, // 0.3–1.0
+    resting: boolean,
   }],
   resources: { rawTobacco: number, curedTobacco: number },
   assignments: { planting:n, tending:n, harvesting:n, curing:n, maintenance:n },
@@ -38,16 +42,16 @@ Start year: 1780 (tobacco). Victory: 1793 (cotton gin). Game over: bankruptcy.
 ```
 
 ## Key files
-- `src/gameLogic/constants.js` — ALL tuning values. Never hardcode numbers elsewhere.
-- `src/gameLogic/initialState.js` — `createInitialState()` returns a fresh gameState.
-- `src/gameLogic/logUtils.js` — log normalization and push helpers for stable event IDs.
-- `src/gameLogic/taskHints.js` — shared task labels and hint formatting logic.
-- `src/gameLogic/seasonEngine.js` — `resolveSeason(state) → nextState` (pure). `getSellPrice(year) → cents`.
-- `src/hooks/useGameSession.js` — state and localStorage persistence ownership.
-- `src/hooks/useMarketActions.js` — buy/sell/assignment callbacks.
-- `src/hooks/useSeasonAdvance.js` — season transition and outcome toasts.
-- `src/hooks/useToastNotifications.js` — transient UI toast state.
-- `src/App.jsx` — orchestrates hooks and component wiring.
+- `src/gameLogic/constants.ts` — ALL tuning values. Never hardcode numbers elsewhere.
+- `src/gameLogic/initialState.ts` — `createInitialState()` returns a fresh gameState.
+- `src/gameLogic/logUtils.ts` — log normalization and push helpers for stable event IDs.
+- `src/gameLogic/taskHints.ts` — shared task labels and hint formatting logic.
+- `src/gameLogic/seasonEngine.ts` — `resolveSeason(state) → nextState` (pure). `getSellPrice(year) → cents`.
+- `src/hooks/useGameSession.ts` — state and localStorage persistence ownership.
+- `src/hooks/useMarketActions.ts` — buy/sell/assignment callbacks.
+- `src/hooks/useSeasonAdvance.ts` — season transition and outcome toasts.
+- `src/hooks/useToastNotifications.ts` — transient UI toast state.
+- `src/App.tsx` — orchestrates hooks and component wiring.
 - Components receive props only, call callbacks only, own no game state.
 
 ## Conventions
@@ -71,7 +75,7 @@ Do not implement from assumption — ask for sources.
 - Soil depletion from tobacco monoculture was severe and should remain core pressure.
 - Planter finances were debt-pressured; recurring upkeep pressure is more realistic than instant $0 collapse.
 
-When changing `src/gameLogic/constants.js`, read `docs/history.md` first and update it if new research changes a historical range.
+When changing `src/gameLogic/constants.ts`, read `docs/history.md` first and update it if new research changes a historical range.
 
 ## Analyzing run logs
 
