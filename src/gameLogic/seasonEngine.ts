@@ -179,7 +179,8 @@ function resolveWinter(state: GameState): GameState {
   const plots = clonePlots(state.plots);
   const { curing } = state.assignments;
   const writer = createLogWriter(state.log, state.logCounter);
-  let { rawTobacco, curedTobacco } = state.resources;
+  const { rawTobacco } = state.resources;
+  let { curedTobacco } = state.resources;
   const upkeepCost = parseFloat(
     state.workers
       .reduce((sum, w) => sum + (w.type === "enslaved" ? ENSLAVED_UPKEEP_PER_SEASON : 0), 0)
