@@ -1,5 +1,5 @@
 # Session Context — Handoff Document
-**Last updated: 2026-06-01 | HEAD: (commit pending)**
+**Last updated: 2026-06-01 | HEAD: `8d67980`**
 
 This file exists so a new chat session (or a different machine) can pick up context quickly.
 Delete or overwrite it when it goes stale.
