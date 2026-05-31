@@ -130,6 +130,25 @@ export const DEBT_FORECLOSURE_SEASONS = 3;
 // (~$7.50–12.50/quarter). $3/season is conservative for gameplay balance.
 export const HIREOUT_INCOME_PER_WORKER = 3;
 
+// ── Infrastructure ───────────────────────────────────────────────────────────
+// Tier 1 (no cabins): planter & family supervise directly. Works at 1–6 workers.
+export const BASE_HOUSING_CAPACITY = 6;
+// Quarter Cabin Row: each cabin built adds this many worker housing slots.
+// Historical: 1 cabin (~200 sq ft) housed ~4–6 workers. Built from plantation timber in Winter.
+export const CABIN_HOUSING_CAPACITY = 6;
+// Cash cost per cabin. Represents materials from local sawmill; labour is the workforce's.
+// Gameplay-scaled down from historical lumber + ironwork costs (~$100+) for pacing.
+export const CABIN_COST = 60;
+// Tool Cache (Hoe Shed): one-time purchase from a passing trader.
+// Historical: high-quality iron hoes were imported specifically for the Chesapeake tobacco trade.
+export const TOOL_SHED_COST = 80;
+// Yield multiplier from having proper iron tools (applied to raw harvest per plot).
+export const TOOL_SHED_YIELD_BONUS = 0.10;
+// Upkeep per enslaved worker when provision grounds are active (vs ENSLAVED_UPKEEP_PER_SEASON).
+// Workers grow vegetables, keep chickens, fish on Sundays — partially self-provisioning.
+// Historical: saves significant cash per worker; Virginia planters widely used this.
+export const PROVISION_UPKEEP_PER_WORKER = 4;
+
 // ── Starting conditions ─────────────────────────────────────────────────────
 export const STARTING_MONEY = 500;
 export const STARTING_WORKERS = 4;

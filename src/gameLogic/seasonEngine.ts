@@ -12,6 +12,7 @@ import {
   TOBACCO_PRICE_CURVE,
   PRICE_VARIANCE_CENTS,
   ENSLAVED_UPKEEP_PER_SEASON,
+  PROVISION_UPKEEP_PER_WORKER,
   HIREOUT_INCOME_PER_WORKER,
   DEBT_FORECLOSURE_SEASONS,
   COTTON_GIN_YEAR,
@@ -19,6 +20,7 @@ import {
   FLAVOR_MILESTONES,
   SOIL_THRESHOLDS,
   EVENT_HEADER_TEXT,
+  TOOL_SHED_YIELD_BONUS,
 } from "./constants";
 import { pushLog as pushStructuredLog } from "./logUtils";
 import type { Assignments, GameState, LogEntry, Plot, SeasonName, TaskName } from "./types";
@@ -130,7 +132,8 @@ function resolveSpring(state: GameState): GameState {
 
   const fallowPlots = plots.filter((p) => p.state === "fallow");
   const restingPlots = fallowPlots.filter((p) => p.resting);
-  const activeFallowPlots = fallowPlots.filter((p) => !p.resting);
+  // Provision plots are always fallow but never available for tobacco planting.
+  const activeFallowPlots = fallowPlots.filter((p) => !p.resting && p.cropType !== "provision");
 
   if (planting === 0) {
     writer.add("Spring — No workers assigned to planting. Fields lie idle.");
@@ -197,7 +200,12 @@ function resolveFall(state: GameState): GameState {
   const writer = createLogWriter(state.log, state.logCounter);
   let rawGained = 0;
 
-  const readyPlots = plots.filter((p) => p.state === "tended" || p.state === "planted");
+  const readyPlots = plots.filter((p) => (p.state === "tended" || p.state === "planted") && p.cropType !== "provision");
+
+  // Tool shed bonus: +10% raw yield per plot when player owns a Tool Cache.
+  const toolShedMultiplier = (state.buildings ?? []).some((b) => b.type === "tool_shed")
+    ? 1 + TOOL_SHED_YIELD_BONUS
+    : 1.0;
 
   if (readyPlots.length === 0) {
     writer.add("Fall — Nothing to harvest.");
@@ -221,7 +229,7 @@ function resolveFall(state: GameState): GameState {
     const plot = readyPlots[i];
     const yieldModifier = plot.yieldModifier ?? 1.0;
     const soilFactor = plot.soilHealth / 100;
-    const raw = Math.floor(BASE_YIELD_PER_PLOT * soilFactor * yieldModifier);
+    const raw = Math.floor(BASE_YIELD_PER_PLOT * soilFactor * yieldModifier * toolShedMultiplier);
     rawGained += raw;
 
     plot.soilHealth = Math.max(0, plot.soilHealth - SOIL_DEGRADE_PER_HARVEST);
@@ -270,15 +278,20 @@ function resolveWinter(state: GameState): GameState {
   const writer = createLogWriter(state.log, state.logCounter);
   const { rawTobacco } = state.resources;
   let { curedTobacco } = state.resources;
+
+  // Provision grounds reduce upkeep from $7 to $4 per enslaved worker per season.
+  const hasProvisionGrounds = (state.plots ?? []).some((p) => p.cropType === "provision");
+  const upkeepPerWorker = hasProvisionGrounds ? PROVISION_UPKEEP_PER_WORKER : ENSLAVED_UPKEEP_PER_SEASON;
   const upkeepCost = parseFloat(
     state.workers
-      .reduce((sum, w) => sum + (w.type === "enslaved" ? ENSLAVED_UPKEEP_PER_SEASON : 0), 0)
+      .reduce((sum, w) => sum + (w.type === "enslaved" ? upkeepPerWorker : 0), 0)
       .toFixed(2)
   );
   const enslaved = state.workers.filter((w) => w.type === "enslaved").length;
   const moneyAfterUpkeep = parseFloat((state.money - upkeepCost).toFixed(2));
 
-  writer.add(`Winter — Provisioning for ${enslaved} enslaved worker${enslaved !== 1 ? "s" : ""} cost $${upkeepCost.toFixed(2)}.`);
+  const provisionNote = hasProvisionGrounds ? " (reduced — provision grounds active)" : "";
+  writer.add(`Winter — Provisioning for ${enslaved} enslaved worker${enslaved !== 1 ? "s" : ""} cost $${upkeepCost.toFixed(2)}.${provisionNote}`);
 
   const maxCanCure = curing * CURING_CAPACITY_PER_WORKER;
   const rawUsed = Math.min(rawTobacco, maxCanCure);

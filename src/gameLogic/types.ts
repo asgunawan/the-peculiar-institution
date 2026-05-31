@@ -16,14 +16,24 @@ export interface Worker {
 
 export type PlotState = "fallow" | "planted" | "tended";
 
+export type CropType = "tobacco" | "provision";
+
 export interface Plot {
   id: number;
   name: string;
   soilHealth: number;
-  cropType: "tobacco";
+  cropType: CropType;
   state: PlotState;
   yieldModifier: number;
   resting: boolean;
+}
+
+export type BuildingType = "quarter_cabin" | "tool_shed";
+
+export interface Building {
+  id: number;
+  type: BuildingType;
+  builtYear: number;
 }
 
 export interface Resources {
@@ -51,6 +61,7 @@ export interface GameState {
   money: number;
   workers: Worker[];
   plots: Plot[];
+  buildings: Building[];
   resources: Resources;
   assignments: Assignments;
   log: LogEntry[];

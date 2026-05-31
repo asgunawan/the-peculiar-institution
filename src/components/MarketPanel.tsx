@@ -3,8 +3,13 @@ import {
   ENSLAVED_PURCHASE_COST,
   FREE_WORKER_WAGE_PER_SEASON,
   PLOT_COST,
+  BASE_HOUSING_CAPACITY,
+  CABIN_HOUSING_CAPACITY,
+  CABIN_COST,
+  TOOL_SHED_COST,
+  TOOL_SHED_YIELD_BONUS,
 } from "../gameLogic/constants";
-import type { SeasonName } from "../gameLogic/types";
+import type { Building, SeasonName } from "../gameLogic/types";
 
 const PLOT_TIMING_HINT: Record<SeasonName, string> = {
   Spring: "Buy before advancing to plant it this season.",
@@ -20,11 +25,16 @@ interface MarketPanelProps {
   currentPrice: number;
   onSellTen: () => void;
   onSellAll: () => void;
+  totalWorkers: number;
+  enslavedCount: number;
+  buildings: Building[];
   onBuyWorker: () => void;
   onHireFreeWorker: () => void;
   onDismissFreeWorker: () => void;
   freeCount: number;
   onBuyPlot: () => void;
+  onBuildCabin: () => void;
+  onBuyToolShed: () => void;
 }
 
 export default function MarketPanel({
@@ -34,15 +44,25 @@ export default function MarketPanel({
   currentPrice,
   onSellTen,
   onSellAll,
+  totalWorkers,
+  enslavedCount,
+  buildings,
   onBuyWorker,
   onHireFreeWorker,
   onDismissFreeWorker,
   freeCount,
   onBuyPlot,
+  onBuildCabin,
+  onBuyToolShed,
 }: MarketPanelProps) {
   const saleValue = ((curedTobacco * currentPrice) / 100).toFixed(2);
   const tenLbAmount = Math.min(10, curedTobacco);
   const tenLbValue = ((tenLbAmount * currentPrice) / 100).toFixed(2);
+
+  const cabinCount = buildings.filter((b) => b.type === "quarter_cabin").length;
+  const housingCapacity = BASE_HOUSING_CAPACITY + cabinCount * CABIN_HOUSING_CAPACITY;
+  const housingFull = enslavedCount >= housingCapacity;
+  const hasToolShed = buildings.some((b) => b.type === "tool_shed");
 
   return (
     <section className="panel market-panel">
@@ -73,9 +93,20 @@ export default function MarketPanel({
       <div className="market-row">
         <div className="market-copy">
           <p className="market-item">Purchase Enslaved Worker</p>
-          <p className="market-sub">${ENSLAVED_PURCHASE_COST} upfront - $7/season upkeep, permanent labor.</p>
+          <p className="market-sub">
+            ${ENSLAVED_PURCHASE_COST} upfront &mdash; $7/season upkeep, permanent labor.
+          </p>
+          <p className="market-sub">
+            Housing: {enslavedCount} / {housingCapacity}
+            {housingFull && <span className="market-sub-warn"> — quarters full</span>}
+          </p>
         </div>
-        <button className="btn btn-buy" onClick={onBuyWorker} disabled={money < ENSLAVED_PURCHASE_COST}>
+        <button
+          className="btn btn-buy"
+          onClick={onBuyWorker}
+          disabled={money < ENSLAVED_PURCHASE_COST || housingFull}
+          title={housingFull ? "Build more cabin rows to house additional workers" : undefined}
+        >
           Buy (${ENSLAVED_PURCHASE_COST})
         </button>
       </div>
@@ -120,6 +151,45 @@ export default function MarketPanel({
         </div>
         <button className="btn btn-buy" onClick={onBuyPlot} disabled={money < PLOT_COST}>
           Buy (${PLOT_COST})
+        </button>
+      </div>
+
+      <hr className="market-divider" />
+
+      <h3 className="market-section-heading">Infrastructure</h3>
+
+      <div className="market-row">
+        <div className="market-copy">
+          <p className="market-item">Quarter Cabin Row</p>
+          <p className="market-sub">
+            +{CABIN_HOUSING_CAPACITY} worker housing capacity. Built from plantation timber.
+          </p>
+          {cabinCount > 0 && (
+            <p className="market-sub market-sub-owned">
+              {cabinCount} built &mdash; capacity {housingCapacity} (base {BASE_HOUSING_CAPACITY} + {cabinCount * CABIN_HOUSING_CAPACITY})
+            </p>
+          )}
+        </div>
+        <button className="btn btn-buy" onClick={onBuildCabin} disabled={money < CABIN_COST}>
+          Build (${CABIN_COST})
+        </button>
+      </div>
+
+      <div className="market-row">
+        <div className="market-copy">
+          <p className="market-item">Tool Cache</p>
+          <p className="market-sub">
+            +{Math.round(TOOL_SHED_YIELD_BONUS * 100)}% harvest yield. Iron hoes from a passing trader.
+          </p>
+          {hasToolShed && <p className="market-sub market-sub-owned">Owned &mdash; active this season</p>}
+        </div>
+        <button
+          className="btn btn-buy"
+          onClick={onBuyToolShed}
+          disabled={money < TOOL_SHED_COST || hasToolShed}
+          title={hasToolShed ? "Already purchased" : undefined}
+        >
+          {hasToolShed ? "Owned ✓" : `Buy ($${TOOL_SHED_COST})`}
         </button>
       </div>
     </section>

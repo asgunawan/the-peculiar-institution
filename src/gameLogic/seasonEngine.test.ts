@@ -5,7 +5,10 @@ import {
   FALLOW_RECOVERY_CAP,
   FALLOW_RECOVERY_PER_SEASON,
   HIREOUT_INCOME_PER_WORKER,
+  PROVISION_UPKEEP_PER_WORKER,
   SOIL_RESTORE_PER_WORKER,
+  TOOL_SHED_YIELD_BONUS,
+  BASE_YIELD_PER_PLOT,
 } from "./constants";
 import { createInitialState } from "./initialState";
 import { resolveSeason } from "./seasonEngine";
@@ -310,5 +313,88 @@ describe("resolveSeason", () => {
       (startMoney - state.workers.filter(w => w.type === "enslaved").length * ENSLAVED_UPKEEP_PER_SEASON).toFixed(2)
     );
     expect(next.money).toBe(expectedMoney);
+  });
+
+  it("provision grounds reduce enslaved upkeep in Winter", () => {
+    const startMoney = 500;
+    const base = createInitialState();
+    const state = createState({
+      seasonIndex: 3, // Winter
+      money: startMoney,
+      workers: [{ id: 1, type: "enslaved" }, { id: 2, type: "enslaved" }],
+      plots: [
+        { ...base.plots[0], id: 1, state: "fallow", cropType: "provision" },
+      ],
+      assignments: { curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const next = resolveSeason(state);
+    const expectedCost = 2 * PROVISION_UPKEEP_PER_WORKER;
+    expect(parseFloat((startMoney - next.money).toFixed(2))).toBe(expectedCost);
+  });
+
+  it("no provision grounds uses full enslaved upkeep in Winter", () => {
+    const startMoney = 500;
+    const state = createState({
+      seasonIndex: 3,
+      money: startMoney,
+      workers: [{ id: 1, type: "enslaved" }, { id: 2, type: "enslaved" }],
+      assignments: { curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const next = resolveSeason(state);
+    const expectedCost = 2 * ENSLAVED_UPKEEP_PER_SEASON;
+    expect(parseFloat((startMoney - next.money).toFixed(2))).toBe(expectedCost);
+  });
+
+  it("tool shed adds yield bonus to Fall harvest", () => {
+    const base = createInitialState();
+    const soilHealth = 80;
+    const yieldModifier = 1.0;
+
+    const stateWithout = createState({
+      seasonIndex: 2, // Fall
+      buildings: [],
+      plots: [{ ...base.plots[0], id: 1, state: "tended", soilHealth, yieldModifier }],
+      assignments: { harvesting: 1, curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const stateWith = createState({
+      seasonIndex: 2,
+      buildings: [{ id: 1, type: "tool_shed" as const, builtYear: 1780 }],
+      plots: [{ ...base.plots[0], id: 1, state: "tended", soilHealth, yieldModifier }],
+      assignments: { harvesting: 1, curing: 0, maintenance: 0 },
+      resources: { rawTobacco: 0, curedTobacco: 0 },
+    });
+
+    const nextWithout = resolveSeason(stateWithout);
+    const nextWith = resolveSeason(stateWith);
+    const baseYield = Math.floor(BASE_YIELD_PER_PLOT * (soilHealth / 100) * yieldModifier);
+    const expectedWithBonus = Math.floor(baseYield * (1 + TOOL_SHED_YIELD_BONUS));
+
+    expect(nextWithout.resources.rawTobacco).toBe(baseYield);
+    expect(nextWith.resources.rawTobacco).toBe(expectedWithBonus);
+  });
+
+  it("Spring planting skips provision plots", () => {
+    const base = createInitialState();
+    const state = createState({
+      seasonIndex: 0, // Spring
+      plots: [
+        { ...base.plots[0], id: 1, state: "fallow", resting: false, cropType: "tobacco" },
+        { ...base.plots[0], id: 2, name: "Provision", state: "fallow", resting: false, cropType: "provision" },
+      ],
+      assignments: { planting: 5, tending: 0, harvesting: 0, curing: 0, maintenance: 0 },
+    });
+
+    const next = resolveSeason(state);
+    const tobaccoPlot = next.plots.find((p) => p.id === 1);
+    const provisionPlot = next.plots.find((p) => p.id === 2);
+
+    expect(tobaccoPlot?.state).toBe("planted");
+    expect(provisionPlot?.state).toBe("fallow"); // provision skipped
   });
 });

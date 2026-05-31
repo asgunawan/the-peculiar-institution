@@ -1,9 +1,10 @@
-import type { GameState, Plot, Worker } from "./types";
+import type { Building, GameState, Plot, Worker } from "./types";
 import { normalizeLog } from "./logUtils";
 
 type PartialSavedState = Partial<GameState> & {
   workers?: Worker[] | number | unknown;
   plots?: Plot[] | unknown;
+  buildings?: Building[] | unknown;
   log?: unknown;
   logCounter?: number;
 };
@@ -22,9 +23,17 @@ export function normalizeSavedState(
   const plots = Array.isArray(savedState.plots)
     ? savedState.plots.map((p) => {
         const plot = p as Plot;
-        return { ...plot, resting: plot.resting ?? false };
+        return {
+          ...plot,
+          resting: plot.resting ?? false,
+          cropType: plot.cropType ?? "tobacco",
+        };
       })
     : freshState.plots;
+
+  const buildings = Array.isArray(savedState.buildings)
+    ? (savedState.buildings as Building[])
+    : [];
 
   const { log, nextId } = normalizeLog(
     Array.isArray(savedState.log) ? (savedState.log as Array<string | { id: number; text: string }>) : [],
@@ -36,6 +45,7 @@ export function normalizeSavedState(
     ...savedState,
     workers,
     plots,
+    buildings,
     log,
     logCounter: nextId,
     debtSeasons: savedState.debtSeasons ?? 0,

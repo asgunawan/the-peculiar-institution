@@ -531,6 +531,86 @@
 
 .btn-buy:not(:disabled):hover { opacity: 0.8; }
 
+/* ── Infrastructure (Market section) ─────────────────────────────────────── */
+
+.market-section-heading {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin: 0.25rem 0 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.market-sub-warn {
+  color: var(--red);
+  font-weight: bold;
+}
+
+.market-sub-owned {
+  color: var(--green);
+}
+
+/* ── Provision Grounds (LandPanel) ───────────────────────────────────────── */
+
+.plot-provision {
+  opacity: 0.9;
+  grid-template-columns: 120px 60px 1fr auto;
+}
+
+.plot-state-provision {
+  color: var(--green);
+  font-style: normal;
+  font-size: 0.8rem;
+}
+
+.provision-grounds-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(90, 138, 64, 0.12);
+  border: 1px solid rgba(90, 138, 64, 0.3);
+  border-radius: 3px;
+  padding: 0 0.5rem;
+  height: 22px;
+}
+
+.provision-grounds-label {
+  font-size: 0.72rem;
+  color: var(--green);
+  opacity: 0.9;
+}
+
+.soil-pct-provision {
+  min-width: 60px;
+}
+
+/* Provision conversion button in LandPanel */
+.btn-plot-provision {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid rgba(90, 138, 64, 0.5);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+
+.btn-plot-provision:hover {
+  opacity: 1;
+  border-color: var(--green);
+  background: rgba(90, 138, 64, 0.12);
+}
+
+/* plot-actions wrapper for rest + provision buttons */
+.plot-actions {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
 /* ── Side Menu (hamburger drawer) ────────────────────────────────────────── */
 
 /*
@@ -542,17 +622,19 @@
 
 .side-menu {
   position: fixed;
-  left: calc(-270px);   /* panel width = 270px, tab width = 36px → hidden: -270px so tab peeks */
+  left: -18px;
   top: 10px;
   z-index: 200;
+  width: 306px; /* 36px toggle + 270px panel */
+  height: 44px;
   transition: left 0.22s ease;
-  /* The <details> contains both the toggle tab and the panel side by side */
-  width: calc(36px + 270px);
 }
 
 .side-menu:hover,
+.side-menu:focus-within,
 .side-menu[open] {
   left: 0;
+  height: calc(100vh - 20px);
 }
 
 .side-menu-toggle {
@@ -562,18 +644,17 @@
   width: 36px;
   height: 44px;
   position: absolute;
-  left: 270px;   /* tab sits at the right edge of the panel */
+  left: 0;
   top: 0;
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-left: none;
   border-radius: 0 4px 4px 0;
   cursor: pointer;
   list-style: none;
   color: var(--accent);
   font-size: 1.1rem;
   user-select: none;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
 }
 
 /* Remove default disclosure triangle in all browsers */
@@ -586,19 +667,26 @@
 
 .side-menu-panel {
   position: absolute;
-  left: 0;
+  left: 36px;
   top: 0;
   width: 270px;
   max-height: calc(100vh - 20px);
   overflow-y: auto;
   background: var(--bg-panel);
   border: 1px solid var(--border);
+  border-left: none;
   border-radius: 0 4px 4px 0;
   padding: 0.85rem;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 0.4rem;
   box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
+}
+
+.side-menu:hover > .side-menu-panel,
+.side-menu:focus-within > .side-menu-panel,
+.side-menu[open] > .side-menu-panel {
+  display: flex;
 }
 
 .side-menu-section-label {

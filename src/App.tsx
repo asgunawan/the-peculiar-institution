@@ -87,6 +87,9 @@ export default function App() {
     handleHireFreeWorker,
     handleDismissFreeWorker,
     handleBuyPlot,
+    handleBuildCabin,
+    handleBuyToolShed,
+    handleConvertToProvision,
   } = useMarketActions({ state, setState, currentPrice, addToast });
 
   const season = SEASONS[state.seasonIndex] as SeasonName;
@@ -320,7 +323,12 @@ export default function App() {
               plots={state.plots}
               onChange={handleAssignmentChange}
             />
-            <LandPanel plots={state.plots} maintenanceSoilGain={maintenanceSoilGain} onTogglePlotRest={handleTogglePlotRest} />
+            <LandPanel
+              plots={state.plots}
+              maintenanceSoilGain={maintenanceSoilGain}
+              onTogglePlotRest={handleTogglePlotRest}
+              onConvertToProvision={handleConvertToProvision}
+            />
           </div>
           <div className="col-right">
             <ResourcePanel resources={state.resources} />
@@ -338,11 +346,16 @@ export default function App() {
               currentPrice={currentPrice}
               onSellTen={handleSellTen}
               onSellAll={handleSellAll}
+              totalWorkers={totalWorkers}
+              enslavedCount={enslavedCount}
+              buildings={state.buildings ?? []}
               onBuyWorker={handleBuyWorker}
               onHireFreeWorker={handleHireFreeWorker}
               onDismissFreeWorker={handleDismissFreeWorker}
               freeCount={freeCount}
               onBuyPlot={handleBuyPlot}
+              onBuildCabin={handleBuildCabin}
+              onBuyToolShed={handleBuyToolShed}
             />
             <EventLog log={state.log} />
           </div>

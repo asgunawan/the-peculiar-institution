@@ -10,7 +10,7 @@ import {
   START_YEAR,
   FLAVOR_MILESTONES,
 } from "./constants";
-import type { GameState, Plot, Worker } from "./types";
+import type { Building, GameState, Plot, Worker } from "./types";
 
 /**
  * Creates the starting pool of workers.
@@ -51,6 +51,9 @@ export function createInitialState(): GameState {
     workers: buildStartingWorkers(STARTING_WORKERS),
 
     plots: buildStartingPlots(STARTING_PLOTS),
+
+    // Physical structures on the plantation. Empty at start (Tier 1: direct supervision).
+    buildings: [] as Building[],
 
     resources: {
       rawTobacco: 0, // lbs harvested, awaiting curing
