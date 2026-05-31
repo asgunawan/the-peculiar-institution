@@ -1,5 +1,5 @@
 # Session Context — Handoff Document
-**Last updated: 2026-06-01 | HEAD: `8d67980`**
+**Last updated: 2026-06-01 | HEAD: `5387713`**
 
 This file exists so a new chat session (or a different machine) can pick up context quickly.
 Delete or overwrite it when it goes stale.
@@ -36,7 +36,11 @@ Delete or overwrite it when it goes stale.
     stays expanded when `[open]`. CSS-only (`transition: left 0.22s`).
 11. **`EVENT_HEADER_TEXT`** — short 1-line header summaries per event id (separate from full log text).
 
-### Session N (this session — Slave Infrastructure: Tiers 2/3/4)
+### Session N+1 (this session — balance simulation)
+20. **`scripts/_sim_test.py`** — standalone Python balance simulation (Strategies A/B/C). Mirrors engine constants (provision upkeep, tool shed bonus, housing cap). Adds Strategy C (infrastructure-first: tool shed in Winter 1780, provision grounds at 3+ plots, cabin-gated worker buying).
+21. **Simulation results** (see "Balance findings" section below).
+
+### Session N (previous — Slave Infrastructure: Tiers 2/3/4)
 12. **`Building` type + `buildings: Building[]` on GameState** — `types.ts` extended with `BuildingType = "quarter_cabin" | "tool_shed"` and `Building { id, type, builtYear }`.
 13. **`CropType = "tobacco" | "provision"`** — plots can now be permanently converted to Provision Grounds.
 14. **Quarter Cabin Row ($60)** — buy in Market; adds 6 housing capacity. Base capacity = 6 (no cabin needed at start).
@@ -128,6 +132,29 @@ PROVISION_UPKEEP_PER_WORKER = 4
 }
 ```
 
+### Balance simulation findings (`scripts/_sim_test.py`)
+
+All three strategies reach VICTORY (1793 Summer) with **no debt** — the game is currently too forgiving.
+
+| Strategy | Final $ | Min $ | End state |
+|---|---|---|---|
+| A — Standard | $143.96 | $128.96 | 6w / 3 plots / no infra |
+| B — Land-heavy | $130.76 | $130.76 | 4w / 9 plots / no infra |
+| C — Infra-first | $334.30 | $105.52 | 6w / 3tp + 1prov / tool shed |
+
+**Key observations:**
+- Tool shed ($80) + provision grounds together give Strategy C a **~$190 cushion advantage** over A/B at game end — infra is meaningfully rewarding but not game-breaking.
+- Soil bottoms out ~avg 3–9 by 1786 in A/C (3 plots, 4–6 workers), dropping yields to 360–800 lbs/Fall — sustained depletion pressure is real.
+- **Housing cap never binds** — 6 base slots is enough for all strategies through 1793. The cabin mechanic effectively goes untested. May need to raise starting upkeep pressure or lower BASE_HOUSING_CAPACITY.
+- Strategy B (9 plots, 4 workers) survives via land rotation — many plots always fallow and recovering soil — but production volume is similar to A/C mid-game.
+- **No strategy ever risks game-over** — debt pressure needs to be higher, OR starting conditions tighter, OR upkeep needs to scale with year.
+
+**Open design questions for next session:**
+1. Should BASE_HOUSING_CAPACITY be lower (e.g. 4) to make the cabin gate meaningful?
+2. Should ENSLAVED_UPKEEP_PER_SEASON increase over time (e.g. +1 every few years) to raise late-game debt pressure?
+3. Is the ~$190 infra advantage for Strategy C the intended reward, or should provision/tool shed be costlier?
+4. Should soil below a threshold (e.g. <10) cause plot abandonment or forced fallow, not just low yield?
+
 ### Known test coverage gaps
 - No tests for tending / harvesting / curing yield math
 - No integration test for a full game year
@@ -138,7 +165,14 @@ PROVISION_UPKEEP_PER_WORKER = 4
 
 ## Next priorities (suggested order)
 
-### 1. Human playtest
+### 1. Address balance findings from simulation
+The simulation (`scripts/_sim_test.py`) found no strategy ever risks game-over. Before human playtesting:
+- **Consider** lowering `BASE_HOUSING_CAPACITY` from 6 → 4 to make the cabin gate bind earlier.
+- **Discuss** whether upkeep should scale over time or starting money should be tighter.
+- **Discuss** whether soil <10 should trigger forced fallow (not just yield drop).
+Do NOT change constants without reading `docs/history.md` first.
+
+### 2. Human playtest
 Play the game for a full 5–7 years. Focus on:
 - Does soil pressure feel real by year 4–5?
 - Does the provision grounds trade-off feel meaningful?
@@ -146,14 +180,14 @@ Play the game for a full 5–7 years. Focus on:
 - Does the Tool Cache feel worth $80?
 - Export a run log (`window.downloadRunLog()`) and run `python scripts/analyze_run.py <log>`.
 
-### 2. Remaining infrastructure (if desired)
+### 3. Remaining infrastructure (if desired)
 From `docs/infrastructure-brainstorm.md`:
 - **Tobacco Barn** — curing/storage capacity increase (Tier 5)
 - **Driver system** — enslaved supervisor, productivity bonus for large gangs (Tier 6)
 - **Overseer house** — paid white overseer, larger workforce cap (post-MVP)
 Cotton chain and cotton gin mechanics are explicitly **out of scope** until victory conditions are revisited.
 
-### 3. Review remaining design docs
+### 4. Review remaining design docs
 - `docs/tobacco-technology-brainstorm.md` — mechanic ideas
 - `docs/story-and-setting.md` — narrative/framing ideas
 - `concept.txt` (repo root) — original design research

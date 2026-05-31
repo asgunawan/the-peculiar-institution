@@ -29,11 +29,17 @@ FALLOW_RECOVERY_CAP       = 75
 CURING_RATIO              = 2
 CURING_CAPACITY_PER_WORKER = 1000
 WORKERS_PER_PLOT_FULL_TEND = 1.5
-ENSLAVED_UPKEEP           = 7      # paid once per Winter
+ENSLAVED_UPKEEP           = 7      # paid once per Winter (no provision grounds)
+PROVISION_UPKEEP          = 4      # paid once per Winter when provision grounds active
 FREE_WORKER_WAGE          = 15     # paid immediately on hire; worker leaves at season end
 HIREOUT_INCOME            = 3      # per maintenance worker per growing season
 ENSLAVED_COST             = 200
 PLOT_COST                 = 150
+CABIN_COST                = 60     # +6 housing capacity
+CABIN_CAPACITY            = 6
+BASE_HOUSING_CAPACITY     = 6
+TOOL_SHED_COST            = 80     # one-time: +10% harvest yield
+TOOL_SHED_YIELD_BONUS     = 0.10
 DEBT_FORECLOSURE_SEASONS  = 3
 FALLOW_SOIL_THRESHOLD     = 66     # rest plots below this health (user's threshold)
 COTTON_GIN_YEAR           = 1793
@@ -52,15 +58,16 @@ def get_price(year):
 # ── Simulation core ────────────────────────────────────────────────────────
 
 class Plot:
-    def __init__(self, pid):
+    def __init__(self, pid, crop="tobacco"):
         self.id = pid
         self.soil = 100.0
         self.state = "fallow"        # fallow | planted | tended
         self.yield_mod = 1.0
         self.resting = False
+        self.crop = crop             # "tobacco" | "provision"
 
     def clone(self):
-        p = Plot(self.id)
+        p = Plot(self.id, self.crop)
         p.soil, p.state, p.yield_mod, p.resting = self.soil, self.state, self.yield_mod, self.resting
         return p
 
